@@ -27,10 +27,18 @@ func TestSayHelloVar(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	got := Ping()
+	got := app.Ping()
 	if got != true {
 		t.Errorf("App is not returning pinging")
 	}
+}
+
+func TestWalletEcho(t *testing.T) {
+	given := "secret"
+	got := app.WalletEcho(given)
+	want := "WALLET " + app.Echo(given)
+	assertCorrectMessage(t, got, want)
+
 }
 
 func assertCorrectMessage(t testing.TB, got, want string) {
