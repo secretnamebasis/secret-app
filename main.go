@@ -7,13 +7,8 @@ import (
 )
 
 func main() {
-	go func() {
-		err := code.RunApp()
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	}()
-
+	err := code.RunApp()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

@@ -80,6 +80,7 @@ var (
 )
 
 func RunApp() error {
+	stop := make(chan struct{})
 
 	if WalletConnection() == false {
 		return fmt.Errorf("Failed to establish wallet connection")
@@ -93,38 +94,41 @@ func RunApp() error {
 	db_name = fmt.Sprintf("%s_%s.bbolt.db", APP_NAME, Sha1Sum(WalletAddress()))
 	fmt.Printf(WalletEcho("ID has been created"))
 
-	go func() { // flip that shit on
+	db := func() *bbolt.DB { // flip that shit on
 		db, err := CreateDB(db_name)
 		defer db.Close()
 		if err != nil {
 			logger.Error(err, err.Error())
 		}
 		fmt.Printf(WalletEcho("Database has been created"))
-
-		// Let's make a bucket
-		sale = []byte("SALE")
-		CreateBucket(db, sale)
-		fmt.Printf(WalletEcho("Sale's list initiated"))
+		close(stop)
+		return db
 	}()
 
-	transfers, err := WalletGetTransfers()
-	if err != nil {
-		// Print error and return
-		logger.Error(err, "Error getting transfers from wallet")
-		return err
+	// Let's make a bucket
+	sale = []byte("SALE")
+	CreateBucket(db, sale)
+	fmt.Printf(WalletEcho("Sale's list initiated"))
+
+	for {
+		select {
+		case <-stop:
+			return nil // Stop the loop and return nil
+		default:
+			transfers, err := WalletGetTransfers()
+			if err != nil {
+				logger.Error(err, "Error getting transfers from wallet")
+				return err
+			}
+			fmt.Printf(WalletEcho("Transfers retrieved"))
+			_, err = HandleIncomingTransfers(transfers.Entries)
+			if err != nil {
+				logger.Error(err, "Error handling incoming transfers")
+				return err
+			}
+			// Perform other operations if needed
+		}
 	}
-	fmt.Printf(WalletEcho("Transfers retreived"))
-	_, err = HandleIncomingTransfers(transfers.Entries)
-	if err != nil {
-
-		// Print error and return
-		logger.Error(err, "Error handling incoming transfers")
-		return err
-	}
-	// fmt.Printf(handle)
-
-	return nil
-
 }
 
 func Echo(Name string) string {
