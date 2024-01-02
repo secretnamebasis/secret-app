@@ -3,12 +3,17 @@ package main
 import (
 	"log"
 
-	"github.com/secretnamebasis/secret-app/app"
+	"github.com/secretnamebasis/secret-app/code"
 )
 
 func main() {
-	err := app.RunApp()
-	if err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		err := code.RunApp()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}()
+
 }

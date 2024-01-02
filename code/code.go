@@ -1,7 +1,8 @@
-package app
+package code
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -26,15 +27,17 @@ var (
 	Name         = "secret"
 	Welcome      = SayHello(Name)
 	walletHeight *rpc.GetHeight_Result
-	Addr         *rpc.Address
-	Addr_result  rpc.GetAddress_Result
+	addr         *rpc.Address
+	clone        *rpc.Address
+	addr_result  rpc.GetAddress_Result
 	logger       logr.Logger = logr.Discard() // default discard all logs
-	db_name                  = fmt.Sprintf("%s_%s.bbolt.db", APP_NAME, Sha1Sum(WalletAddress()))
-	sale                     = []byte("SALE")
+	sale                     = []byte("")
 	username                 = Name
 	password                 = "pass"
 	endpoint                 = "http://192.168.12.208:10104/json_rpc"
+	db_name      string
 
+	transfers  rpc.Get_Transfers_Result
 	HttpClient = &http.Client{
 		Transport: &TransportWithBasicAuth{
 			Username: username,
@@ -77,15 +80,51 @@ var (
 )
 
 func RunApp() error {
-	Logger()
-	fmt.Printf(WalletEcho(Name))
-	db, err := CreateDB(db_name)
-	if err != nil {
-		logger.Error(err, err.Error())
+
+	if WalletConnection() == false {
+		return fmt.Errorf("Failed to establish wallet connection")
 	}
-	CreateBucket(db, sale)
-	CreateServiceAddress()
+
+	Logger()
+
+	fmt.Printf(WalletEcho("Logger has started"))
+
+	// Let's make a database
+	db_name = fmt.Sprintf("%s_%s.bbolt.db", APP_NAME, Sha1Sum(WalletAddress()))
+	fmt.Printf(WalletEcho("ID has been created"))
+
+	go func() { // flip that shit on
+		db, err := CreateDB(db_name)
+		defer db.Close()
+		if err != nil {
+			logger.Error(err, err.Error())
+		}
+		fmt.Printf(WalletEcho("Database has been created"))
+
+		// Let's make a bucket
+		sale = []byte("SALE")
+		CreateBucket(db, sale)
+		fmt.Printf(WalletEcho("Sale's list initiated"))
+	}()
+
+	transfers, err := WalletGetTransfers()
+	if err != nil {
+		// Print error and return
+		logger.Error(err, "Error getting transfers from wallet")
+		return err
+	}
+	fmt.Printf(WalletEcho("Transfers retreived"))
+	_, err = HandleIncomingTransfers(transfers.Entries)
+	if err != nil {
+
+		// Print error and return
+		logger.Error(err, "Error handling incoming transfers")
+		return err
+	}
+	// fmt.Printf(handle)
+
 	return nil
+
 }
 
 func Echo(Name string) string {
@@ -131,20 +170,21 @@ func CreateBucket(db *bbolt.DB, bucketName []byte) error {
 }
 
 func CreateDB(db_name string) (*bbolt.DB, error) {
-	if db_name == "" {
-		db_name = fmt.Sprintf("%s_%s.bbolt.db", APP_NAME, Sha1Sum(WalletAddress()))
-	}
-	if !Testing {
-		db, err := bbolt.Open(db_name, 0600, nil)
-		if err != nil {
-			fmt.Printf("could not open db err:%s\n", err)
-			return nil, err
-		}
 
-		return db, nil
+	db, err := bbolt.Open(db_name, 0600, nil)
+	if err != nil {
+		fmt.Printf(err.Error())
+		return nil, err
 	}
+	return db, nil
+}
 
-	return nil, nil
+func WalletConnection() bool {
+	test := WalletEcho(Name)
+	if test != "WALLET "+Name+"\n" {
+		return false
+	}
+	return true
 }
 
 func WalletHeight() int {
@@ -158,25 +198,67 @@ func WalletHeight() int {
 
 func WalletAddress() string {
 
-	err = RpcClient.CallFor(&Addr_result, "GetAddress")
-	if err != nil || Addr_result.Address == "" {
+	err = RpcClient.CallFor(&addr_result, "GetAddress")
+	if err != nil || addr_result.Address == "" {
 		fmt.Printf("Could not obtain address from wallet err %s\n", err)
 		return err.Error()
 	}
 
-	if Addr, err = rpc.NewAddress(Addr_result.Address); err != nil {
-		fmt.Printf("address could not be parsed: addr:%s err:%s\n", Addr_result.Address, err)
+	addr, err = rpc.NewAddress(addr_result.Address)
+	if err != nil {
+		fmt.Printf("address could not be parsed: addr:%s err:%s\n", addr_result.Address, err)
 		return err.Error()
 	}
-	return Addr.String()
+	return addr.String()
 }
-func CreateServiceAddress() string {
-	service_address_without_amount := Addr.Clone()
-	service_address_without_amount.Arguments = Expected_arguments[:len(Expected_arguments)-1]
-	err, _ := fmt.Printf("Integrated address to activate '%s'\nWithout hardcoded amount) service: \n%s\n", APP_NAME, service_address_without_amount.String())
-	if err == 0 {
-		return ""
+
+func WalletGetTransfers() (rpc.Get_Transfers_Result, error) {
+
+	err = RpcClient.CallFor(
+		&transfers,
+		"GetTransfers",
+		rpc.Get_Transfers_Params{
+			In: true,
+		},
+	)
+	if err != nil {
+		logger.Error(err, "Could not obtain gettransfers from wallet")
+		return transfers, err
 	}
+
+	return transfers, nil
+}
+
+func HandleIncomingTransfers(entries []rpc.Entry) (string, error) {
+	var errorMsg string
+
+	for _, e := range entries {
+		// Simulating a condition that might lead to an error
+		if e.Amount <= 0 {
+			return fmt.Sprintf("invalid transaction amount: %d", e.Amount), errors.New("invalid transaction amount")
+		}
+
+		// Preparing the processing message
+		msg := fmt.Sprintf("Processing incoming transaction: TXID - %s, Amount - %d\n", e.TXID, e.Amount)
+		errorMsg += msg
+	}
+
+	return errorMsg, nil
+}
+
+func CreateServiceAddress(addr string) string {
+	clone, err = rpc.NewAddress(addr)
+	service_address := clone.Clone()
+	return service_address.String()
+}
+
+func CreateServiceAddressWithoutHardcodedValue(addr string) string {
+	clone, err = rpc.NewAddress(addr)
+	service_address_without_amount := clone.Clone()
+
+	service_address_without_amount.
+		Arguments = Expected_arguments[:len(Expected_arguments)-1]
+
 	return service_address_without_amount.String()
 }
 

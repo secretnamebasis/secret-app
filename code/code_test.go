@@ -1,4 +1,4 @@
-package app_test
+package code_test
 
 import (
 	"crypto/sha1"
@@ -8,71 +8,135 @@ import (
 	"os"
 	"testing"
 
-	"github.com/secretnamebasis/secret-app/app"
+	"github.com/secretnamebasis/secret-app/code"
 	"go.etcd.io/bbolt"
 )
 
 func TestRunApp(t *testing.T) {
+	given := fmt.Sprintf("%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.WalletAddress()))
+	defer func() {
+		err := os.Remove(given)
+		if err != nil {
+			t.Errorf("Error cleaning up: %s", err)
+		}
+	}()
 
-	if app.RunApp() != nil {
+	if code.RunApp() != nil {
 		t.Errorf("App is not running when trying to run app")
 	}
-}
 
+}
 func TestSayVar(t *testing.T) {
 	name := "Alixander"
-	if app.Echo(name) != name {
+	if code.Echo(name) != name {
 		t.Errorf("App is not returning strings")
 	}
 }
 
 func TestSayHelloVar(t *testing.T) {
 	given := "secret"
-	got := app.SayHello(given)
+	got := code.SayHello(given)
 	want := "Hello, secret"
 	assertCorrectMessage(t, got, want)
 }
 
 func TestPing(t *testing.T) {
-	got := app.Ping()
+	got := code.Ping()
 	if got != true {
 		t.Errorf("App is not returning pinging")
 	}
 }
 
-func TestWalletEcho(t *testing.T) {
-	given := "secret"
-	got := app.WalletEcho(given)
-	want := "WALLET " + app.Echo(given) + "\n"
-	assertCorrectMessage(t, got, want)
+func TestWallet(t *testing.T) {
+	if t.Run(
+		"TestWalletConnection",
+		func(t *testing.T) {
+			got := code.WalletConnection()
+			if got != true {
+				t.Errorf("Your wallet is not connected")
+			}
+		},
+	) != true {
+		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
+	}
+	t.Run(
+		"TestWalletEcho",
+		func(t *testing.T) {
+			given := "secret"
+			got := code.WalletEcho(given)
+			want := "WALLET " + code.Echo(given) + "\n"
+			assertCorrectMessage(t, got, want)
+		},
+	)
+	t.Run(
+		"TestWalletAddress",
+		func(t *testing.T) {
+			got := code.WalletAddress()
+			want := code.DEVELOPER_ADDRESS
+			assertCorrectMessage(t, got, want)
 
+		},
+	)
+	t.Run(
+		"TestWalletAddressSha1Sum",
+		func(t *testing.T) {
+			given := code.DEVELOPER_ADDRESS
+			got := code.Sha1Sum(given)
+			want := fmt.Sprintf("%x", sha1.Sum([]byte(code.DEVELOPER_ADDRESS)))
+			if got != want {
+				t.Errorf("got %q", got)
+			}
+		})
+	t.Run(
+		"TestWalletHeight",
+		func(t *testing.T) {
+			got := code.WalletHeight()
+			if got == 0 {
+				t.Errorf("got %q", got)
+			}
+		},
+	)
+	t.Run(
+		"TestWalletCreateServiceAddress",
+		func(t *testing.T) {
+			given := code.DEVELOPER_ADDRESS
+			got := code.CreateServiceAddress(given)
+			if got == "" {
+				t.Errorf("got %s", got)
+			}
+		},
+	)
+	t.Run(
+		"TestWalletCreateServiceAddressWithoutHardcodedValue",
+		func(t *testing.T) {
+			got := code.CreateServiceAddressWithoutHardcodedValue(code.CreateServiceAddress(code.DEVELOPER_ADDRESS))
+			if got == "" {
+				t.Errorf("got %s", got)
+			}
+		},
+	)
+	t.Run(
+		"TestWalletGetTransfers",
+		func(t *testing.T) {
+			_, got := code.WalletGetTransfers()
+			if got != nil {
+				t.Errorf(got.Error())
+			}
+		},
+	)
 }
 
-func TestWalletAddress(t *testing.T) {
-	got := app.WalletAddress()
-	want := app.DEVELOPER_ADDRESS
-	assertCorrectMessage(t, got, want)
-}
-
-func TestWalletHeight(t *testing.T) {
-	got := app.WalletHeight()
-	if got == 0 {
-		t.Errorf("got %q", got)
+func TestHandleIncomingTransfers(t *testing.T) {
+	given, _ := code.WalletGetTransfers()
+	_, got := code.HandleIncomingTransfers(given.Entries)
+	if got != nil {
+		t.Errorf("got %s", got)
 	}
 }
 
 func TestLogger(t *testing.T) {
-	got := app.Logger()
+	got := code.Logger()
 	if got != nil {
-		t.Errorf("got %q", got)
-	}
-}
-
-func TestSha1SumCrypto(t *testing.T) {
-	given := app.DEVELOPER_ADDRESS
-	got := app.Sha1Sum(given)
-	want := fmt.Sprintf("%x", sha1.Sum([]byte(app.DEVELOPER_ADDRESS)))
-	if got != want {
 		t.Errorf("got %q", got)
 	}
 }
@@ -107,7 +171,7 @@ func TestRoundTrip(t *testing.T) {
 	defer ts.Close()
 
 	// Create a TransportWithBasicAuth instance
-	authTransport := &app.TransportWithBasicAuth{
+	authTransport := &code.TransportWithBasicAuth{
 		Username: givenUsername,
 		Password: givenPassword,
 		Base:     http.DefaultTransport,
@@ -128,11 +192,15 @@ func TestRoundTrip(t *testing.T) {
 
 }
 
-func TestCreateDB(t *testing.T) {
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", app.APP_NAME, app.Sha1Sum(app.DEVELOPER_ADDRESS))
+func TestDB(t *testing.T) {
+	if code.WalletConnection() != true {
+		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
+	}
+
+	given := fmt.Sprintf("test_%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.DEVELOPER_ADDRESS))
 
 	t.Run(
-		"create",
+		"TestCreateDB",
 		func(t *testing.T) {
 			assertDBCreation(t, given, func(db *bbolt.DB) error {
 				_, err := os.Stat(given)
@@ -143,31 +211,8 @@ func TestCreateDB(t *testing.T) {
 			})
 		},
 	)
-}
-
-func TestCreateSalesBucket(t *testing.T) {
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", app.APP_NAME, app.Sha1Sum(app.DEVELOPER_ADDRESS))
-
-	assertDBCreation(t, given, func(db *bbolt.DB) error {
-		err := app.CreateBucket(db, []byte("SALE"))
-		if err != nil {
-			return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
-		}
-
-		err = assertBucketExists(t, db, []byte("SALE"))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-func TestUpdateDB(t *testing.T) {
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", app.APP_NAME, app.Sha1Sum(app.DEVELOPER_ADDRESS))
-
 	t.Run(
-		"update",
+		"TestUpdateDB",
 		func(t *testing.T) {
 			assertDBCreation(t, given, func(db *bbolt.DB) error {
 				return db.Update(func(tx *bbolt.Tx) error {
@@ -177,18 +222,32 @@ func TestUpdateDB(t *testing.T) {
 			})
 		},
 	)
-}
 
-func TestCreateServiceAddress(t *testing.T) {
-	got := app.CreateServiceAddress()
-	if got == "" {
-		t.Fatalf("got %s", got)
-	}
+	t.Run(
+		"TestCreateSalesBucket",
+		func(t *testing.T) {
+			given := fmt.Sprintf("test_%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.DEVELOPER_ADDRESS))
+
+			assertDBCreation(t, given, func(db *bbolt.DB) error {
+				err := code.CreateBucket(db, []byte("SALE"))
+				if err != nil {
+					return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
+				}
+
+				err = assertBucketExists(t, db, []byte("SALE"))
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+		},
+	)
 }
 
 func assertDBCreation(t *testing.T, given string, fn func(db *bbolt.DB) error) {
 
-	given = fmt.Sprintf("test_%s_%s.bbolt.db", app.APP_NAME, app.Sha1Sum(app.DEVELOPER_ADDRESS))
+	given = fmt.Sprintf("test_%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.DEVELOPER_ADDRESS))
 
 	defer func() {
 		err := os.Remove(given)
@@ -197,7 +256,7 @@ func assertDBCreation(t *testing.T, given string, fn func(db *bbolt.DB) error) {
 		}
 	}()
 
-	db, err := app.CreateDB(given)
+	db, err := code.CreateDB(given)
 	if err != nil {
 		t.Fatalf("Error creating database: %s", err)
 	}
