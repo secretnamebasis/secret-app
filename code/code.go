@@ -10,10 +10,18 @@ import (
 	"github.com/deroproject/derohe/globals"
 	"github.com/deroproject/derohe/rpc"
 	"github.com/deroproject/derohe/walletapi"
+	"github.com/go-logr/logr"
+	"github.com/secretnamebasis/secret-app/code/exports"
 	"github.com/secretnamebasis/secret-app/code/functions"
 	"go.etcd.io/bbolt"
 
 	"gopkg.in/natefinch/lumberjack.v2"
+)
+
+var (
+	db_name string
+	sale    []byte
+	logger  logr.Logger = logr.Discard()
 )
 
 func RunApp() error {
@@ -36,7 +44,7 @@ func RunApp() error {
 	// Let's make a database
 	db_name = fmt.Sprintf(
 		"%s_%s.bbolt.db",
-		APP_NAME,
+		exports.APP_NAME,
 		Sha1Sum(functions.Address()),
 	)
 
