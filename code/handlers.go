@@ -1,4 +1,4 @@
-package functions
+package code
 
 import (
 	"errors"
@@ -7,19 +7,20 @@ import (
 	"github.com/deroproject/derohe/rpc"
 	"github.com/deroproject/derohe/walletapi"
 	"github.com/secretnamebasis/secret-app/exports"
-
+	"github.com/secretnamebasis/secret-app/functions"
 	"go.etcd.io/bbolt"
 )
 
 func HandleIncomingTransfers(db *bbolt.DB) error {
 	LoopActivated := false
+	Logs.Info("Entering For Loop")
 	for {
-		transfers, err := GetTransfers()
+		transfers, err := functions.GetTransfers()
 		if err != nil {
-			exports.Logs.Error(err, "Wallet Failed to Get Entries")
+			Logs.Error(err, "Wallet Failed to Get Entries")
 		}
 		if !LoopActivated {
-			exports.Logs.Info("Wallet Entries are Instantiated")
+			Logs.Info("Wallet Entries are Instantiated")
 			LoopActivated = true
 		}
 
@@ -54,29 +55,29 @@ func HandleIncomingTransfers(db *bbolt.DB) error {
 
 			}
 
-			exports.Logs.V(1).Info("to be processed", "txid", e.TXID)
+			Logs.V(1).Info("to be processed", "txid", e.TXID)
 			if exports.Expected_arguments.Has(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64) { // this service is expecting value to be specfic
 				value_expected := exports.Expected_arguments.Value(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64).(uint64)
 				if e.Amount != value_expected { // TODO we should mark it as faulty
-					exports.Logs.Error(nil, fmt.Sprintf("user transferred %d, we were expecting %d. so we will not do anything", e.Amount, value_expected)) // this is an unexpected situation
+					Logs.Error(nil, fmt.Sprintf("user transferred %d, we were expecting %d. so we will not do anything", e.Amount, value_expected)) // this is an unexpected situation
 					continue
 				}
 
 				if !e.Payload_RPC.Has(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress) {
-					exports.Logs.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
+					Logs.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
 					continue
 				}
 
 				destination_expected := e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress).(rpc.Address).String()
 				addr, err := rpc.NewAddress(destination_expected)
 				if err != nil {
-					exports.Logs.Error(err, "err while while parsing incoming addr")
+					Logs.Error(err, "err while while parsing incoming addr")
 					continue
 				}
 				addr.Mainnet = true // convert addresses to testnet form, by default it's expected to be mainnnet
 				destination_expected = addr.String()
 
-				exports.Logs.V(1).Info("tx should be replied", "txid", e.TXID, "replyback_address", destination_expected)
+				Logs.V(1).Info("tx should be replied", "txid", e.TXID, "replyback_address", destination_expected)
 
 				//destination_expected := e.Sender
 
@@ -91,7 +92,7 @@ func HandleIncomingTransfers(db *bbolt.DB) error {
 				tparams := rpc.Transfer_Params{Transfers: []rpc.Transfer{{Destination: destination_expected, Amount: uint64(1), Payload_RPC: exports.Response}}}
 				err = exports.RpcClient.CallFor(&result, "Transfer", tparams)
 				if err != nil {
-					exports.Logs.Error(err, "err while transfer")
+					Logs.Error(err, "err while transfer")
 					continue
 				}
 
@@ -100,9 +101,9 @@ func HandleIncomingTransfers(db *bbolt.DB) error {
 					return b.Put([]byte(e.TXID), []byte("done"))
 				})
 				if err != nil {
-					exports.Logs.Error(err, "err updating db")
+					Logs.Error(err, "err updating db")
 				} else {
-					exports.Logs.Info("ping replied successfully with pong ", "result", result)
+					Logs.Info("ping replied successfully with pong ", "result", result)
 				}
 				if exports.Testing == true {
 					return nil

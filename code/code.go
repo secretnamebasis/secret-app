@@ -21,20 +21,23 @@ var (
 
 func RunApp() error {
 
-	Logger()
-
-	if functions.Connection() == false {
-		err := errors.New("Wallet Connection Failure")
-		Logs.Error(err, "Error")
-		return fmt.Errorf(
-			"Failed to establish wallet connection",
-		)
+	err := Logger()
+	if err != nil {
+		return err
 	}
 	Logs.Info(
 		functions.Echo(
 			"Logger has started",
 		),
 	)
+
+	if functions.Connection() == false {
+		err = errors.New("Wallet Connection Failure")
+		Logs.Error(err, "Error")
+		return fmt.Errorf(
+			"Failed to establish wallet connection",
+		)
+	}
 
 	// Let's make a database
 	db_name = fmt.Sprintf(
@@ -88,8 +91,10 @@ func RunApp() error {
 		),
 	)
 
-	functions.HandleIncomingTransfers(db)
-
+	err = HandleIncomingTransfers(db)
+	if err != nil {
+		return err
+	}
 	return nil // Stop the loop and return nil
 
 }
@@ -109,6 +114,6 @@ func Logger() error {
 	})
 	Logs = globals.Logger
 
-	return nil
+	return err
 
 }
