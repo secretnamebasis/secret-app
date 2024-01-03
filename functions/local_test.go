@@ -27,10 +27,3 @@ func TestPing(t *testing.T) {
 		t.Errorf("App is not returning pinging")
 	}
 }
-
-func TestLogger(t *testing.T) {
-	got := functions.Logger()
-	if got != nil {
-		t.Errorf("got %q", got)
-	}
-}

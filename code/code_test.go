@@ -29,3 +29,10 @@ func TestRunApp(t *testing.T) {
 	}
 
 }
+
+func TestLogger(t *testing.T) {
+	got := code.Logger()
+	if got != nil {
+		t.Errorf("got %q", got)
+	}
+}

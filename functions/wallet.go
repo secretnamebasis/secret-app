@@ -53,7 +53,7 @@ func GetTransfers() (rpc.Get_Transfers_Result, error) {
 		},
 	)
 	if err != nil {
-		logger.Error(err, "Could not obtain gettransfers from wallet")
+		exports.Logs.Error(err, "Could not obtain gettransfers from wallet")
 		return exports.Transfers, err
 	}
 
