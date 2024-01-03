@@ -6,7 +6,7 @@ go 1.17
 
 require (
 	github.com/deroproject/derohe v0.0.0-00010101000000-000000000000
-	github.com/go-logr/logr v1.2.4
+	github.com/go-logr/logr v1.4.1
 	github.com/ybbus/jsonrpc v2.1.2+incompatible
 	go.etcd.io/bbolt v1.3.8
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
