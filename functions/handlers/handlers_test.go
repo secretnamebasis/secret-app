@@ -10,13 +10,17 @@ import (
 )
 
 func TestHandleIncomingTransfers(t *testing.T) {
+	t.Run(
+		"Test Incoming Transfers for Pong",
+		func(t *testing.T) {
 
-	asserts.DBCreationWithBucket(t, func(db *bbolt.DB) error {
+			asserts.DBCreationWithBucket(t, func(db *bbolt.DB) error {
 
-		got := handlers.HandleIncomingTransfers(db)
-		if got != nil {
-			t.Errorf("got %s", got)
-		}
-		return nil
-	})
+				got := handlers.HandleIncomingTransfers(db)
+				if got != nil {
+					t.Errorf("got %s", got)
+				}
+				return nil
+			})
+		})
 }

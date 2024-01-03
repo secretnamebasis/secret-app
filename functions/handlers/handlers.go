@@ -35,27 +35,31 @@ func HandleIncomingTransfers(db *bbolt.DB) error {
 			}
 
 			// check whether the entry has been processed before, if yes skip it
+
 			var already_processed bool
-			db.View(func(tx *bbolt.Tx) error {
-				if b := tx.Bucket([]byte("SALE")); b != nil {
-					if ok := b.Get([]byte(e.TXID)); ok != nil { // if existing in bucket
-						already_processed = true
+			db.View(
+				func(tx *bbolt.Tx) error {
+					if b := tx.Bucket([]byte("SALE")); b != nil {
+						if ok := b.Get([]byte(e.TXID)); ok != nil { // if existing in bucket
+							already_processed = true
+						}
 					}
-				}
-				return nil
-			})
+					return nil
+				},
+			)
 
 			if already_processed { // if already processed skip it
 				continue
 			}
 
 			// check whether this service should handle the transfer
-			if !e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64) ||
-				exports.DEST_PORT != e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64) { // this service is expecting value to be specfic
+			if !e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64) {
 				continue
-
 			}
 
+			if exports.DEST_PORT != e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64) { // this service is expecting value to be specfic
+				continue
+			}
 			exports.Logs.V(1).Info("to be processed", "txid", e.TXID)
 			if exports.Expected_arguments.Has(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64) { // this service is expecting value to be specfic
 				value_expected := exports.Expected_arguments.Value(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64).(uint64)
@@ -97,6 +101,7 @@ func HandleIncomingTransfers(db *bbolt.DB) error {
 					continue
 				}
 
+				// update database
 				err = db.Update(func(tx *bbolt.Tx) error {
 					b := tx.Bucket([]byte("SALE"))
 					return b.Put([]byte(e.TXID), []byte("done"))

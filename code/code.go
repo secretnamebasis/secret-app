@@ -8,7 +8,7 @@ import (
 	"github.com/secretnamebasis/secret-app/functions/crypto"
 	"github.com/secretnamebasis/secret-app/functions/database"
 	"github.com/secretnamebasis/secret-app/functions/handlers"
-	"github.com/secretnamebasis/secret-app/functions/logger"
+	logger "github.com/secretnamebasis/secret-app/functions/logger"
 	"github.com/secretnamebasis/secret-app/functions/wallet"
 )
 
@@ -24,9 +24,10 @@ func RunApp() error {
 	logger.Logger()
 
 	exports.Logs.Info(
-		wallet.Echo(
-			"Logger has started",
-		),
+		wallet.
+			Echo(
+				"Logger has started",
+			),
 	)
 
 	if wallet.Connection() == false {
@@ -57,42 +58,49 @@ func RunApp() error {
 	}
 
 	exports.Logs.Info(
-		wallet.Echo(
-			"Database has been created",
-		),
+		wallet.
+			Echo(
+				"Database has been created",
+			),
 	)
 
 	// Let's make a bucket
 	sale = []byte("SALE")
-	database.CreateBucket(db, sale)
+	database.
+		CreateBucket(db, sale)
 
 	exports.Logs.Info(
-		wallet.Echo(
-			"Sale's list initiated",
-		),
+		wallet.
+			Echo(
+				"Sale's list initiated",
+			),
 	)
 	exports.Logs.Info(
-		wallet.Echo(
-			"Integrated Address with Expected Arguments: " +
-				wallet.CreateServiceAddress(
-					wallet.Address(),
-				),
-		),
+		wallet.
+			Echo(
+				"Integrated Address with Expected Arguments: " +
+					wallet.
+						CreateServiceAddress(
+							wallet.
+								Address(),
+						),
+			),
 	)
 
 	exports.Logs.Info(
-		wallet.Echo(
-			"Integrated Address with Expected Arguments minus Hardcoded Value: " +
-				wallet.CreateServiceAddressWithoutHardcodedValue(
-					wallet.Address(),
-				),
-		),
+		wallet.
+			Echo(
+				"Integrated Address with Expected Arguments minus Hardcoded Value: " +
+					wallet.
+						CreateServiceAddressWithoutHardcodedValue(
+							wallet.
+								Address(),
+						),
+			),
 	)
 
-	err = handlers.HandleIncomingTransfers(db)
-	if err != nil {
-		return err
-	}
+	handlers.
+		HandleIncomingTransfers(db)
+
 	return nil // Stop the loop and return nil
-
 }
