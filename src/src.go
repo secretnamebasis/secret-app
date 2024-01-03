@@ -53,7 +53,7 @@ func RunApp() error {
 		),
 	)
 
-	db, err := CreateDB(db_name)
+	db, err := functions.CreateDB(db_name)
 
 	if err != nil {
 		logger.Error(err, err.Error())
@@ -67,7 +67,7 @@ func RunApp() error {
 
 	// Let's make a bucket
 	sale = []byte("SALE")
-	CreateBucket(db, sale)
+	functions.CreateBucket(db, sale)
 
 	logger.Info(
 		functions.Echo(
@@ -117,24 +117,6 @@ func Logger() error {
 
 	return err
 
-}
-
-func CreateBucket(db *bbolt.DB, bucketName []byte) error {
-	return db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucketName)
-		return err
-	})
-}
-
-func CreateDB(db_name string) (*bbolt.DB, error) {
-
-	db, err := bbolt.Open(db_name, 0600, nil)
-	if err != nil {
-		fmt.Printf(err.Error())
-		return nil, err
-	}
-
-	return db, nil
 }
 
 func HandleIncomingTransfers(db *bbolt.DB) error {

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/secretnamebasis/secret-app/asserts"
+	"github.com/secretnamebasis/secret-app/src"
 
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions"
@@ -19,7 +20,7 @@ func TestRunApp(t *testing.T) {
 	Testing := true
 	if !Testing {
 
-		given := fmt.Sprintf("%s_%s.bbolt.db", exports.APP_NAME, code.Sha1Sum(exports.DEVELOPER_ADDRESS))
+		given := fmt.Sprintf("%s_%s.bbolt.db", exports.APP_NAME, src.Sha1Sum(exports.DEVELOPER_ADDRESS))
 		defer func() {
 			err := os.Remove(given)
 			if err != nil {
@@ -27,7 +28,7 @@ func TestRunApp(t *testing.T) {
 			}
 		}()
 
-		if code.RunApp() != nil {
+		if src.RunApp() != nil {
 			t.Errorf("App is not running when trying to run app")
 		}
 	}
@@ -58,7 +59,7 @@ func TestHandleIncomingTransfers(t *testing.T) {
 
 	asserts.DBCreationWithBucket(t, func(db *bbolt.DB) error {
 
-		got := code.HandleIncomingTransfers(db)
+		got := src.HandleIncomingTransfers(db)
 		if got != nil {
 			t.Errorf("got %s", got)
 		}
@@ -67,7 +68,7 @@ func TestHandleIncomingTransfers(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	got := code.Logger()
+	got := src.Logger()
 	if got != nil {
 		t.Errorf("got %q", got)
 	}
@@ -122,56 +123,4 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-}
-
-func TestDB(t *testing.T) {
-	if functions.Connection() != true {
-		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
-	}
-
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, code.Sha1Sum(exports.DEVELOPER_ADDRESS))
-
-	t.Run(
-		"TestCreateDB",
-		func(t *testing.T) {
-			asserts.DBCreation(t, func(db *bbolt.DB) error {
-				_, err := os.Stat(given)
-				if err != nil {
-					return fmt.Errorf("Error checking file existence: %s", err)
-				}
-				return nil
-			})
-		},
-	)
-	t.Run(
-		"TestUpdateDB",
-		func(t *testing.T) {
-			asserts.DBCreation(t, func(db *bbolt.DB) error {
-				return db.Update(func(tx *bbolt.Tx) error {
-					_, err := tx.CreateBucketIfNotExists([]byte("SALE"))
-					return err
-				})
-			})
-		},
-	)
-
-	t.Run(
-		"TestCreateSalesBucket",
-		func(t *testing.T) {
-
-			asserts.DBCreation(t, func(db *bbolt.DB) error {
-				err := code.CreateBucket(db, []byte("SALE"))
-				if err != nil {
-					return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
-				}
-
-				err = asserts.BucketExists(t, db, []byte("SALE"))
-				if err != nil {
-					return err
-				}
-
-				return nil
-			})
-		},
-	)
 }

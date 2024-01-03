@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions"
 	"github.com/secretnamebasis/secret-app/src"
 	"go.etcd.io/bbolt"
 )
@@ -13,7 +14,7 @@ import (
 func DBCreationWithBucket(t *testing.T, fn func(db *bbolt.DB) error) {
 	DBCreation(
 		t, func(db *bbolt.DB) error {
-			err := src.CreateBucket(db, []byte("SALE"))
+			err := functions.CreateBucket(db, []byte("SALE"))
 			if err != nil {
 				return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
 			}
@@ -30,7 +31,7 @@ func DBCreationWithBucket(t *testing.T, fn func(db *bbolt.DB) error) {
 
 func DBCreation(t *testing.T, fn func(db *bbolt.DB) error) {
 
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, code.Sha1Sum(exports.DEVELOPER_ADDRESS))
+	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, src.Sha1Sum(exports.DEVELOPER_ADDRESS))
 
 	defer func() {
 		err := os.Remove(given)
@@ -39,7 +40,7 @@ func DBCreation(t *testing.T, fn func(db *bbolt.DB) error) {
 		}
 	}()
 
-	db, err := code.CreateDB(given)
+	db, err := functions.CreateDB(given)
 	if err != nil {
 		t.Fatalf("Error creating database: %s", err)
 	}
