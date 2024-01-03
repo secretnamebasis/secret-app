@@ -1,4 +1,4 @@
-package code_test
+package src_test
 
 import (
 	"fmt"
@@ -7,9 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/secretnamebasis/secret-app/code"
-	"github.com/secretnamebasis/secret-app/code/exports"
-	"github.com/secretnamebasis/secret-app/code/functions"
+	"github.com/secretnamebasis/secret-app/asserts"
+
+	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions"
 
 	"go.etcd.io/bbolt"
 )
@@ -34,20 +35,20 @@ func TestRunApp(t *testing.T) {
 }
 func TestSayVar(t *testing.T) {
 	username := "secret"
-	if code.Echo(username) != username {
+	if functions.SayEcho(username) != username {
 		t.Errorf("App is not returning strings")
 	}
 }
 
 func TestSayHelloVar(t *testing.T) {
 	given := "secret"
-	got := code.SayHello(given)
+	got := functions.SayHello(given)
 	want := "Hello, secret"
-	assertCorrectMessage(t, got, want)
+	asserts.CorrectMessage(t, got, want)
 }
 
 func TestPing(t *testing.T) {
-	got := code.Ping()
+	got := functions.Ping()
 	if got != true {
 		t.Errorf("App is not returning pinging")
 	}
@@ -55,7 +56,7 @@ func TestPing(t *testing.T) {
 
 func TestHandleIncomingTransfers(t *testing.T) {
 
-	assertDBCreationWithBucket(t, func(db *bbolt.DB) error {
+	asserts.DBCreationWithBucket(t, func(db *bbolt.DB) error {
 
 		got := code.HandleIncomingTransfers(db)
 		if got != nil {
@@ -102,7 +103,7 @@ func TestRoundTrip(t *testing.T) {
 	defer ts.Close()
 
 	// Create a TransportWithBasicAuth instance
-	authTransport := &code.TransportWithBasicAuth{
+	authTransport := &exports.TransportWithBasicAuth{
 		Username: givenUsername,
 		Password: givenPassword,
 		Base:     http.DefaultTransport,
@@ -133,7 +134,7 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestCreateDB",
 		func(t *testing.T) {
-			assertDBCreation(t, func(db *bbolt.DB) error {
+			asserts.DBCreation(t, func(db *bbolt.DB) error {
 				_, err := os.Stat(given)
 				if err != nil {
 					return fmt.Errorf("Error checking file existence: %s", err)
@@ -145,7 +146,7 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestUpdateDB",
 		func(t *testing.T) {
-			assertDBCreation(t, func(db *bbolt.DB) error {
+			asserts.DBCreation(t, func(db *bbolt.DB) error {
 				return db.Update(func(tx *bbolt.Tx) error {
 					_, err := tx.CreateBucketIfNotExists([]byte("SALE"))
 					return err
@@ -158,13 +159,13 @@ func TestDB(t *testing.T) {
 		"TestCreateSalesBucket",
 		func(t *testing.T) {
 
-			assertDBCreation(t, func(db *bbolt.DB) error {
+			asserts.DBCreation(t, func(db *bbolt.DB) error {
 				err := code.CreateBucket(db, []byte("SALE"))
 				if err != nil {
 					return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
 				}
 
-				err = assertBucketExists(t, db, []byte("SALE"))
+				err = asserts.BucketExists(t, db, []byte("SALE"))
 				if err != nil {
 					return err
 				}

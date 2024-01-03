@@ -4,45 +4,51 @@ import (
 	"fmt"
 
 	"github.com/deroproject/derohe/rpc"
+	"github.com/go-logr/logr"
+	"github.com/secretnamebasis/secret-app/exports"
 )
 
+var err error
+var clone *rpc.Address
+var logger logr.Logger = logr.Discard()
+
 func Connection() bool {
-	test := Echo(username)
-	if test != "WALLET "+username+"\n" {
+	test := Echo(exports.Username)
+	if test != "WALLET "+exports.Username+"\n" {
 		return false
 	}
 	return true
 }
 
-func WalletHeight() int {
-	err = rpcClient.CallFor(&walletHeight, "GetHeight")
-	if err != nil || walletHeight.Height == 0 {
+func Height() int {
+	err = exports.RpcClient.CallFor(&exports.WalletHeight, "GetHeight")
+	if err != nil || exports.WalletHeight.Height == 0 {
 		fmt.Printf("Could not obtain address from wallet err %s\n", err)
 		return 0
 	}
-	return int(walletHeight.Height)
+	return int(exports.WalletHeight.Height)
 }
 
 func Address() string {
 
-	err = rpcClient.CallFor(&addr_result, "GetAddress")
-	if err != nil || addr_result.Address == "" {
+	err = exports.RpcClient.CallFor(&exports.Addr_result, "GetAddress")
+	if err != nil || exports.Addr_result.Address == "" {
 		fmt.Printf("Could not obtain address from wallet err %s\n", err)
 		return err.Error()
 	}
 
-	addr, err = rpc.NewAddress(addr_result.Address)
+	exports.Addr, err = rpc.NewAddress(exports.Addr_result.Address)
 	if err != nil {
-		fmt.Printf("address could not be parsed: addr:%s err:%s\n", addr_result.Address, err)
+		fmt.Printf("address could not be parsed: addr:%s err:%s\n", exports.Addr_result.Address, err)
 		return err.Error()
 	}
-	return addr.String()
+	return exports.Addr.String()
 }
 
 func GetTransfers() (rpc.Get_Transfers_Result, error) {
 
-	err = rpcClient.CallFor(
-		&transfers,
+	err = exports.RpcClient.CallFor(
+		&exports.Transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
 			In: true,
@@ -50,16 +56,16 @@ func GetTransfers() (rpc.Get_Transfers_Result, error) {
 	)
 	if err != nil {
 		logger.Error(err, "Could not obtain gettransfers from wallet")
-		return transfers, err
+		return exports.Transfers, err
 	}
 
-	return transfers, nil
+	return exports.Transfers, nil
 }
 
 func CreateServiceAddress(addr string) string {
 	clone, err = rpc.NewAddress(addr)
 	service_address := clone.Clone()
-	service_address.Arguments = expected_arguments
+	service_address.Arguments = exports.Expected_arguments
 	return service_address.String()
 }
 
@@ -68,14 +74,14 @@ func CreateServiceAddressWithoutHardcodedValue(addr string) string {
 	service_address_without_amount := clone.Clone()
 
 	service_address_without_amount.
-		Arguments = expected_arguments[:len(expected_arguments)-1]
+		Arguments = exports.Expected_arguments[:len(exports.Expected_arguments)-1]
 
 	return service_address_without_amount.String()
 }
 
-func Echo(username string) string {
+func Echo(s string) string {
 	var echoResult string
-	err := rpcClient.CallFor(&echoResult, "Echo", username+"\n")
+	err := exports.RpcClient.CallFor(&echoResult, "Echo", s+"\n")
 	if err != nil {
 		return err.Error()
 	}

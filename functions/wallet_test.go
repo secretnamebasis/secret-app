@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/secretnamebasis/secret-app/code"
-	"github.com/secretnamebasis/secret-app/code/exports"
+	"github.com/secretnamebasis/secret-app/asserts"
+	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions"
+	"github.com/secretnamebasis/secret-app/src"
 )
 
 func TestWallet(t *testing.T) {
@@ -27,8 +28,8 @@ func TestWallet(t *testing.T) {
 		func(t *testing.T) {
 			given := "secret"
 			got := functions.Echo(given)
-			want := "WALLET " + functions.Echo(given) + "\n"
-			assertCorrectMessage(t, got, want)
+			want := "WALLET " + given + "\n"
+			asserts.CorrectMessage(t, got, want)
 		},
 	)
 	t.Run(
@@ -36,7 +37,7 @@ func TestWallet(t *testing.T) {
 		func(t *testing.T) {
 			got := functions.Address()
 			want := exports.DEVELOPER_ADDRESS
-			assertCorrectMessage(t, got, want)
+			asserts.CorrectMessage(t, got, want)
 
 		},
 	)
@@ -44,7 +45,7 @@ func TestWallet(t *testing.T) {
 		"TestWalletAddressSha1Sum",
 		func(t *testing.T) {
 			given := exports.DEVELOPER_ADDRESS
-			got := code.Sha1Sum(given)
+			got := src.Sha1Sum(given)
 			want := fmt.Sprintf("%x", sha1.Sum([]byte(exports.DEVELOPER_ADDRESS)))
 			if got != want {
 				t.Errorf("got %q", got)

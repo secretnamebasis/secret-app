@@ -1,11 +1,11 @@
 package functions
 
-func echo(username string) string {
+func SayEcho(username string) string {
 	return username
 }
 
-func sayHello(username string) string {
-	return "Hello, " + Echo(username)
+func SayHello(username string) string {
+	return "Hello, " + SayEcho(username)
 }
 
 func Ping() bool {

@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"github.com/deroproject/derohe/rpc"
-	"github.com/secretnamebasis/secret-app/code"
-	"github.com/secretnamebasis/secret-app/code/functions"
+
 	"github.com/ybbus/jsonrpc"
 )
 
 var (
 	Testing bool // Global variable to indicate testing mode
-	err     error
+
 )
 
 var (
@@ -24,19 +23,19 @@ var (
 
 var (
 	Pong         = "You have purchased a really cool link"
-	Welcome      = code.SayHello(Username)
-	walletHeight *rpc.GetHeight_Result
-	addr         *rpc.Address
-	clone        *rpc.Address
-	addr_result  rpc.GetAddress_Result
+	Welcome      string
+	WalletHeight *rpc.GetHeight_Result
+	Addr         *rpc.Address
+
+	Addr_result rpc.GetAddress_Result
 	// default discard all logs
 
-	transfers rpc.Get_Transfers_Result
+	Transfers rpc.Get_Transfers_Result
 )
 
 var (
 	HttpClient = &http.Client{
-		Transport: &functions.TransportWithBasicAuth{
+		Transport: &TransportWithBasicAuth{
 			Username: Username,
 			Password: password,
 			Base:     http.DefaultTransport,
@@ -45,7 +44,7 @@ var (
 )
 
 var (
-	rpcClient = jsonrpc.NewClientWithOpts(
+	RpcClient = jsonrpc.NewClientWithOpts(
 		endpoint,
 		&jsonrpc.RPCClientOpts{
 			HTTPClient: HttpClient,
@@ -56,7 +55,7 @@ var (
 var (
 	// currently the interpreter seems to have a glitch if this gets initialized within the code
 	// see limitations github.com/traefik/yaegi
-	response = rpc.Arguments{
+	Response = rpc.Arguments{
 		{
 			Name:     rpc.RPC_DESTINATION_PORT,
 			DataType: rpc.DataUint64,
@@ -76,7 +75,7 @@ var (
 )
 
 var (
-	expected_arguments = rpc.Arguments{
+	Expected_arguments = rpc.Arguments{
 		{
 			Name:     rpc.RPC_DESTINATION_PORT,
 			DataType: rpc.DataUint64,
