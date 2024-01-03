@@ -9,134 +9,94 @@ import (
 
 	"github.com/deroproject/derohe/globals"
 	"github.com/deroproject/derohe/rpc"
-	"github.com/go-logr/logr"
-	"github.com/ybbus/jsonrpc"
+	"github.com/deroproject/derohe/walletapi"
+	"github.com/secretnamebasis/secret-app/code/functions"
 	"go.etcd.io/bbolt"
+
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-const DEVELOPER_ADDRESS = "dero1qyvqpdftj8r6005xs20rnflakmwa5pdxg9vcjzdcuywq2t8skqhvwqglt6x0g"
-const DEVELOPER_NAME = "secretnamebasis"
-const APP_NAME = "secret-app"
-const DEST_PORT = uint64(0x1337)
-const MESSAGE = "secret loves you"
-
-var Testing = false // Global variable to indicate testing mode
-var (
-	err          error
-	Name         = "secret"
-	Welcome      = SayHello(Name)
-	walletHeight *rpc.GetHeight_Result
-	addr         *rpc.Address
-	clone        *rpc.Address
-	addr_result  rpc.GetAddress_Result
-	logger       logr.Logger = logr.Discard() // default discard all logs
-	sale                     = []byte("")
-	username                 = Name
-	password                 = "pass"
-	endpoint                 = "http://192.168.12.208:10104/json_rpc"
-	db_name      string
-
-	transfers  rpc.Get_Transfers_Result
-	HttpClient = &http.Client{
-		Transport: &TransportWithBasicAuth{
-			Username: username,
-			Password: password,
-			Base:     http.DefaultTransport,
-		},
-	}
-	RpcClient = jsonrpc.NewClientWithOpts(
-		endpoint,
-		&jsonrpc.RPCClientOpts{
-			HTTPClient: HttpClient,
-		},
-	)
-
-	Expected_arguments = rpc.Arguments{
-		{
-			Name:     rpc.RPC_DESTINATION_PORT,
-			DataType: rpc.DataUint64,
-			Value:    DEST_PORT,
-		},
-		// { Name:rpc.RPC_EXPIRY , DataType:rpc.DataTime, Value:time.Now().Add(time.Hour).UTC()},
-		{
-			Name:     rpc.RPC_COMMENT,
-			DataType: rpc.DataString,
-			Value:    MESSAGE,
-		},
-		//{"float64", rpc.DataFloat64, float64(0.12345)},          // in atomic units
-		{
-			Name:     rpc.RPC_NEEDS_REPLYBACK_ADDRESS,
-			DataType: rpc.DataUint64,
-			Value:    uint64(0),
-		}, // this service will reply to incoming request,so needs the senders address
-		{
-			Name:     rpc.RPC_VALUE_TRANSFER,
-			DataType: rpc.DataUint64,
-			Value:    uint64(12345),
-		}, // in atomic units
-
-	}
-)
-
 func RunApp() error {
-	stop := make(chan struct{})
-
-	if WalletConnection() == false {
-		return fmt.Errorf("Failed to establish wallet connection")
-	}
 
 	Logger()
 
-	fmt.Printf(WalletEcho("Logger has started"))
+	if functions.Connection() == false {
+		err := errors.New("Wallet Connection Failure")
+		logger.Error(err, "Error")
+		return fmt.Errorf(
+			"Failed to establish wallet connection",
+		)
+	}
+	logger.Info(
+		functions.Echo(
+			"Logger has started",
+		),
+	)
 
 	// Let's make a database
-	db_name = fmt.Sprintf("%s_%s.bbolt.db", APP_NAME, Sha1Sum(WalletAddress()))
-	fmt.Printf(WalletEcho("ID has been created"))
+	db_name = fmt.Sprintf(
+		"%s_%s.bbolt.db",
+		APP_NAME,
+		Sha1Sum(functions.Address()),
+	)
 
-	db := func() *bbolt.DB { // flip that shit on
-		db, err := CreateDB(db_name)
-		defer db.Close()
-		if err != nil {
-			logger.Error(err, err.Error())
-		}
-		fmt.Printf(WalletEcho("Database has been created"))
-		close(stop)
-		return db
-	}()
+	logger.Info(
+		functions.Echo(
+			"ID has been created",
+		),
+	)
+
+	db, err := CreateDB(db_name)
+
+	if err != nil {
+		logger.Error(err, err.Error())
+	}
+
+	logger.Info(
+		functions.Echo(
+			"Database has been created",
+		),
+	)
 
 	// Let's make a bucket
 	sale = []byte("SALE")
 	CreateBucket(db, sale)
-	fmt.Printf(WalletEcho("Sale's list initiated"))
 
-	for {
-		select {
-		case <-stop:
-			return nil // Stop the loop and return nil
-		default:
-			transfers, err := WalletGetTransfers()
-			if err != nil {
-				logger.Error(err, "Error getting transfers from wallet")
-				return err
-			}
-			fmt.Printf(WalletEcho("Transfers retrieved"))
-			_, err = HandleIncomingTransfers(transfers.Entries)
-			if err != nil {
-				logger.Error(err, "Error handling incoming transfers")
-				return err
-			}
-			// Perform other operations if needed
-		}
-	}
+	logger.Info(
+		functions.Echo(
+			"Sale's list initiated",
+		),
+	)
+	logger.Info(
+		functions.Echo(
+			"Integrated Address with Expected Arguments: " +
+				CreateServiceAddress(
+					functions.Address(),
+				),
+		),
+	)
+
+	logger.Info(
+		functions.Echo(
+			"Integrated Address with Expected Arguments minus Hardcoded Value: " +
+				CreateServiceAddressWithoutHardcodedValue(
+					functions.Address(),
+				),
+		),
+	)
+
+	HandleIncomingTransfers(db)
+
+	return nil // Stop the loop and return nil
+
 }
 
-func Echo(Name string) string {
-	return Name
+func Echo(username string) string {
+	return username
 }
 
-func SayHello(Name string) string {
-	return "Hello, " + Echo(Name)
+func SayHello(username string) string {
+	return "Hello, " + Echo(username)
 }
 
 func Ping() bool {
@@ -144,7 +104,7 @@ func Ping() bool {
 }
 
 func Sha1Sum(DEVELOPER_ADDRESS string) string {
-	shasum := fmt.Sprintf("%x", sha1.Sum([]byte(WalletAddress())))
+	shasum := fmt.Sprintf("%x", sha1.Sum([]byte(functions.Address())))
 	return shasum
 }
 
@@ -152,18 +112,16 @@ func Logger() error {
 	// parse arguments and setup logging, print basic information
 	globals.Arguments["--debug"] = true
 	exename, err := os.Executable()
-	if err != nil {
-		globals.InitializeLog(os.Stdout, &lumberjack.Logger{
-			Filename:   exename + ".log",
-			MaxSize:    100, // megabytes
-			MaxBackups: 2,
-		})
-		logger = globals.Logger
-		logger.Error(err, "Logger failed")
-		return err
-	}
 
-	return nil
+	globals.InitializeLog(os.Stdout, &lumberjack.Logger{
+		Filename:   exename + ".log",
+		MaxSize:    100, // megabytes
+		MaxBackups: 2,
+	})
+	logger = globals.Logger
+
+	return err
+
 }
 
 func CreateBucket(db *bbolt.DB, bucketName []byte) error {
@@ -180,100 +138,110 @@ func CreateDB(db_name string) (*bbolt.DB, error) {
 		fmt.Printf(err.Error())
 		return nil, err
 	}
+
 	return db, nil
 }
 
-func WalletConnection() bool {
-	test := WalletEcho(Name)
-	if test != "WALLET "+Name+"\n" {
-		return false
-	}
-	return true
-}
-
-func WalletHeight() int {
-	err = RpcClient.CallFor(&walletHeight, "GetHeight")
-	if err != nil || walletHeight.Height == 0 {
-		fmt.Printf("Could not obtain address from wallet err %s\n", err)
-		return 0
-	}
-	return int(walletHeight.Height)
-}
-
-func WalletAddress() string {
-
-	err = RpcClient.CallFor(&addr_result, "GetAddress")
-	if err != nil || addr_result.Address == "" {
-		fmt.Printf("Could not obtain address from wallet err %s\n", err)
-		return err.Error()
-	}
-
-	addr, err = rpc.NewAddress(addr_result.Address)
-	if err != nil {
-		fmt.Printf("address could not be parsed: addr:%s err:%s\n", addr_result.Address, err)
-		return err.Error()
-	}
-	return addr.String()
-}
-
-func WalletGetTransfers() (rpc.Get_Transfers_Result, error) {
-
-	err = RpcClient.CallFor(
-		&transfers,
-		"GetTransfers",
-		rpc.Get_Transfers_Params{
-			In: true,
-		},
-	)
-	if err != nil {
-		logger.Error(err, "Could not obtain gettransfers from wallet")
-		return transfers, err
-	}
-
-	return transfers, nil
-}
-
-func HandleIncomingTransfers(entries []rpc.Entry) (string, error) {
-	var errorMsg string
-
-	for _, e := range entries {
-		// Simulating a condition that might lead to an error
-		if e.Amount <= 0 {
-			return fmt.Sprintf("invalid transaction amount: %d", e.Amount), errors.New("invalid transaction amount")
+func HandleIncomingTransfers(db *bbolt.DB) error {
+	forLoop := false
+	for {
+		transfers, err := functions.GetTransfers()
+		if err != nil {
+			logger.Error(err, "Wallet Failed to Get Entries")
+		}
+		if !forLoop {
+			logger.Info("Wallet Entries are Instantiated")
+			forLoop = true
 		}
 
-		// Preparing the processing message
-		msg := fmt.Sprintf("Processing incoming transaction: TXID - %s, Amount - %d\n", e.TXID, e.Amount)
-		errorMsg += msg
+		for _, e := range transfers.Entries {
+			// Simulating a condition that might lead to an error
+			if e.Amount <= 0 {
+				return errors.New("invalid transaction amount")
+			}
+			if e.Coinbase || !e.Incoming { // skip coinbase or outgoing, self generated transactions
+				continue
+			}
+
+			// check whether the entry has been processed before, if yes skip it
+			var already_processed bool
+			db.View(func(tx *bbolt.Tx) error {
+				if b := tx.Bucket([]byte("SALE")); b != nil {
+					if ok := b.Get([]byte(e.TXID)); ok != nil { // if existing in bucket
+						already_processed = true
+					}
+				}
+				return nil
+			})
+
+			if already_processed { // if already processed skip it
+				continue
+			}
+
+			// check whether this service should handle the transfer
+			if !e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64) ||
+				DEST_PORT != e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64) { // this service is expecting value to be specfic
+				continue
+
+			}
+
+			logger.V(1).Info("to be processed", "txid", e.TXID)
+			if expected_arguments.Has(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64) { // this service is expecting value to be specfic
+				value_expected := expected_arguments.Value(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64).(uint64)
+				if e.Amount != value_expected { // TODO we should mark it as faulty
+					logger.Error(nil, fmt.Sprintf("user transferred %d, we were expecting %d. so we will not do anything", e.Amount, value_expected)) // this is an unexpected situation
+					continue
+				}
+
+				if !e.Payload_RPC.Has(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress) {
+					logger.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
+					continue
+				}
+
+				destination_expected := e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress).(rpc.Address).String()
+				addr, err := rpc.NewAddress(destination_expected)
+				if err != nil {
+					logger.Error(err, "err while while parsing incoming addr")
+					continue
+				}
+				addr.Mainnet = true // convert addresses to testnet form, by default it's expected to be mainnnet
+				destination_expected = addr.String()
+
+				logger.V(1).Info("tx should be replied", "txid", e.TXID, "replyback_address", destination_expected)
+
+				//destination_expected := e.Sender
+
+				// value received is what we are expecting, so time for response
+				response[0].Value = e.SourcePort // source port now becomes destination port, similar to TCP
+				response[2].Value = fmt.Sprintf("%s. You sent %s at height %d", Pong, walletapi.FormatMoney(e.Amount), e.Height)
+
+				//_, err :=  response.CheckPack(transaction.PAYLOAD0_LIMIT)) //  we only have 144 bytes for RPC
+
+				// sender of ping now becomes destination
+				var result rpc.Transfer_Result
+				tparams := rpc.Transfer_Params{Transfers: []rpc.Transfer{{Destination: destination_expected, Amount: uint64(1), Payload_RPC: response}}}
+				err = rpcClient.CallFor(&result, "Transfer", tparams)
+				if err != nil {
+					logger.Error(err, "err while transfer")
+					continue
+				}
+
+				err = db.Update(func(tx *bbolt.Tx) error {
+					b := tx.Bucket([]byte("SALE"))
+					return b.Put([]byte(e.TXID), []byte("done"))
+				})
+				if err != nil {
+					logger.Error(err, "err updating db")
+				} else {
+					logger.Info("ping replied successfully with pong ", "result", result)
+				}
+				if Testing == true {
+					return nil
+				}
+			}
+		}
+
 	}
-
-	return errorMsg, nil
-}
-
-func CreateServiceAddress(addr string) string {
-	clone, err = rpc.NewAddress(addr)
-	service_address := clone.Clone()
-	return service_address.String()
-}
-
-func CreateServiceAddressWithoutHardcodedValue(addr string) string {
-	clone, err = rpc.NewAddress(addr)
-	service_address_without_amount := clone.Clone()
-
-	service_address_without_amount.
-		Arguments = Expected_arguments[:len(Expected_arguments)-1]
-
-	return service_address_without_amount.String()
-}
-
-func WalletEcho(Name string) string {
-	var echoResult string
-	err := RpcClient.CallFor(&echoResult, "Echo", Name+"\n")
-	if err != nil {
-		return err.Error()
-	}
-
-	return echoResult
 }
 
 // TransportWithBasicAuth is a custom HTTP transport to set basic authentication

@@ -9,26 +9,31 @@ import (
 	"testing"
 
 	"github.com/secretnamebasis/secret-app/code"
+	"github.com/secretnamebasis/secret-app/functions"
 	"go.etcd.io/bbolt"
 )
 
 func TestRunApp(t *testing.T) {
-	given := fmt.Sprintf("%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.WalletAddress()))
-	defer func() {
-		err := os.Remove(given)
-		if err != nil {
-			t.Errorf("Error cleaning up: %s", err)
-		}
-	}()
+	Testing := true
+	if !Testing {
 
-	if code.RunApp() != nil {
-		t.Errorf("App is not running when trying to run app")
+		given := fmt.Sprintf("%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(functions.Address()))
+		defer func() {
+			err := os.Remove(given)
+			if err != nil {
+				t.Errorf("Error cleaning up: %s", err)
+			}
+		}()
+
+		if code.RunApp() != nil {
+			t.Errorf("App is not running when trying to run app")
+		}
 	}
 
 }
 func TestSayVar(t *testing.T) {
-	name := "Alixander"
-	if code.Echo(name) != name {
+	username := "secret"
+	if code.Echo(username) != username {
 		t.Errorf("App is not returning strings")
 	}
 }
@@ -51,7 +56,7 @@ func TestWallet(t *testing.T) {
 	if t.Run(
 		"TestWalletConnection",
 		func(t *testing.T) {
-			got := code.WalletConnection()
+			got := functions.Connection()
 			if got != true {
 				t.Errorf("Your wallet is not connected")
 			}
@@ -63,7 +68,7 @@ func TestWallet(t *testing.T) {
 		"TestWalletEcho",
 		func(t *testing.T) {
 			given := "secret"
-			got := code.WalletEcho(given)
+			got := functions.Echo(given)
 			want := "WALLET " + code.Echo(given) + "\n"
 			assertCorrectMessage(t, got, want)
 		},
@@ -71,7 +76,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletAddress",
 		func(t *testing.T) {
-			got := code.WalletAddress()
+			got := functions.Address()
 			want := code.DEVELOPER_ADDRESS
 			assertCorrectMessage(t, got, want)
 
@@ -90,7 +95,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletHeight",
 		func(t *testing.T) {
-			got := code.WalletHeight()
+			got := functions.Height()
 			if got == 0 {
 				t.Errorf("got %q", got)
 			}
@@ -118,7 +123,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletGetTransfers",
 		func(t *testing.T) {
-			_, got := code.WalletGetTransfers()
+			_, got := functions.GetTransfers()
 			if got != nil {
 				t.Errorf(got.Error())
 			}
@@ -127,11 +132,15 @@ func TestWallet(t *testing.T) {
 }
 
 func TestHandleIncomingTransfers(t *testing.T) {
-	given, _ := code.WalletGetTransfers()
-	_, got := code.HandleIncomingTransfers(given.Entries)
-	if got != nil {
-		t.Errorf("got %s", got)
-	}
+
+	assertDBCreationWithBucket(t, func(db *bbolt.DB) error {
+
+		got := code.HandleIncomingTransfers(db)
+		if got != nil {
+			t.Errorf("got %s", got)
+		}
+		return nil
+	})
 }
 
 func TestLogger(t *testing.T) {
@@ -193,7 +202,7 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestDB(t *testing.T) {
-	if code.WalletConnection() != true {
+	if functions.Connection() != true {
 		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
 	}
 
@@ -202,7 +211,7 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestCreateDB",
 		func(t *testing.T) {
-			assertDBCreation(t, given, func(db *bbolt.DB) error {
+			assertDBCreation(t, func(db *bbolt.DB) error {
 				_, err := os.Stat(given)
 				if err != nil {
 					return fmt.Errorf("Error checking file existence: %s", err)
@@ -214,7 +223,7 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestUpdateDB",
 		func(t *testing.T) {
-			assertDBCreation(t, given, func(db *bbolt.DB) error {
+			assertDBCreation(t, func(db *bbolt.DB) error {
 				return db.Update(func(tx *bbolt.Tx) error {
 					_, err := tx.CreateBucketIfNotExists([]byte("SALE"))
 					return err
@@ -226,9 +235,8 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestCreateSalesBucket",
 		func(t *testing.T) {
-			given := fmt.Sprintf("test_%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.DEVELOPER_ADDRESS))
 
-			assertDBCreation(t, given, func(db *bbolt.DB) error {
+			assertDBCreation(t, func(db *bbolt.DB) error {
 				err := code.CreateBucket(db, []byte("SALE"))
 				if err != nil {
 					return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
@@ -245,9 +253,27 @@ func TestDB(t *testing.T) {
 	)
 }
 
-func assertDBCreation(t *testing.T, given string, fn func(db *bbolt.DB) error) {
+func assertDBCreationWithBucket(t *testing.T, fn func(db *bbolt.DB) error) {
+	assertDBCreation(
+		t, func(db *bbolt.DB) error {
+			err := code.CreateBucket(db, []byte("SALE"))
+			if err != nil {
+				return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
+			}
 
-	given = fmt.Sprintf("test_%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.DEVELOPER_ADDRESS))
+			err = assertBucketExists(t, db, []byte("SALE"))
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
+}
+
+func assertDBCreation(t *testing.T, fn func(db *bbolt.DB) error) {
+
+	given := fmt.Sprintf("test_%s_%s.bbolt.db", code.APP_NAME, code.Sha1Sum(code.DEVELOPER_ADDRESS))
 
 	defer func() {
 		err := os.Remove(given)
