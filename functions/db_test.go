@@ -8,7 +8,6 @@ import (
 	"github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions"
-	"github.com/secretnamebasis/secret-app/src"
 	"go.etcd.io/bbolt"
 )
 
@@ -17,7 +16,7 @@ func TestDB(t *testing.T) {
 		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
 	}
 
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, src.Sha1Sum(exports.DEVELOPER_ADDRESS))
+	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, functions.Sha1Sum(exports.DEVELOPER_ADDRESS))
 
 	t.Run(
 		"TestCreateDB",

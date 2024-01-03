@@ -7,7 +7,6 @@ import (
 
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions"
-	"github.com/secretnamebasis/secret-app/src"
 	"go.etcd.io/bbolt"
 )
 
@@ -31,7 +30,7 @@ func DBCreationWithBucket(t *testing.T, fn func(db *bbolt.DB) error) {
 
 func DBCreation(t *testing.T, fn func(db *bbolt.DB) error) {
 
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, src.Sha1Sum(exports.DEVELOPER_ADDRESS))
+	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, functions.Sha1Sum(exports.DEVELOPER_ADDRESS))
 
 	defer func() {
 		err := os.Remove(given)

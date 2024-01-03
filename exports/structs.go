@@ -2,10 +2,6 @@ package exports
 
 import "net/http"
 
-type RoundTripper interface {
-	RoundTrip(req *http.Request) (*http.Response, error)
-}
-
 type TransportWithBasicAuth struct {
 	Username string
 	Password string

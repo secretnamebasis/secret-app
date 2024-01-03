@@ -8,7 +8,6 @@ import (
 	"github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions"
-	"github.com/secretnamebasis/secret-app/src"
 )
 
 func TestWallet(t *testing.T) {
@@ -45,7 +44,7 @@ func TestWallet(t *testing.T) {
 		"TestWalletAddressSha1Sum",
 		func(t *testing.T) {
 			given := exports.DEVELOPER_ADDRESS
-			got := src.Sha1Sum(given)
+			got := functions.Sha1Sum(given)
 			want := fmt.Sprintf("%x", sha1.Sum([]byte(exports.DEVELOPER_ADDRESS)))
 			if got != want {
 				t.Errorf("got %q", got)

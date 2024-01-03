@@ -2,8 +2,11 @@ package functions
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/deroproject/derohe/globals"
 	"go.etcd.io/bbolt"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func CreateBucket(db *bbolt.DB, bucketName []byte) error {
@@ -22,4 +25,20 @@ func CreateDB(db_name string) (*bbolt.DB, error) {
 	}
 
 	return db, nil
+}
+
+func Logger() error {
+	// parse arguments and setup logging, print basic information
+	globals.Arguments["--debug"] = true
+	exename, err := os.Executable()
+
+	globals.InitializeLog(os.Stdout, &lumberjack.Logger{
+		Filename:   exename + ".log",
+		MaxSize:    100, // megabytes
+		MaxBackups: 2,
+	})
+	logger = globals.Logger
+
+	return err
+
 }
