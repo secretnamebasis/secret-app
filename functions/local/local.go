@@ -1,4 +1,4 @@
-package functions
+package local
 
 func SayEcho(username string) string {
 	return username

@@ -1,4 +1,4 @@
-package functions_test
+package wallet_test
 
 import (
 	"crypto/sha1"
@@ -7,14 +7,14 @@ import (
 
 	"github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions"
+	"github.com/secretnamebasis/secret-app/functions/wallet"
 )
 
 func TestWallet(t *testing.T) {
 	if t.Run(
 		"TestWalletConnection",
 		func(t *testing.T) {
-			got := functions.Connection()
+			got := wallet.Connection()
 			if got != true {
 				t.Errorf("Your wallet is not connected")
 			}
@@ -26,7 +26,7 @@ func TestWallet(t *testing.T) {
 		"TestWalletEcho",
 		func(t *testing.T) {
 			given := "secret"
-			got := functions.Echo(given)
+			got := wallet.Echo(given)
 			want := "WALLET " + given + "\n"
 			asserts.CorrectMessage(t, got, want)
 		},
@@ -34,7 +34,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletAddress",
 		func(t *testing.T) {
-			got := functions.Address()
+			got := wallet.Address()
 			want := exports.DEVELOPER_ADDRESS
 			asserts.CorrectMessage(t, got, want)
 
@@ -44,7 +44,7 @@ func TestWallet(t *testing.T) {
 		"TestWalletAddressSha1Sum",
 		func(t *testing.T) {
 			given := exports.DEVELOPER_ADDRESS
-			got := functions.Sha1Sum(given)
+			got := wallet.Sha1Sum(given)
 			want := fmt.Sprintf("%x", sha1.Sum([]byte(exports.DEVELOPER_ADDRESS)))
 			if got != want {
 				t.Errorf("got %q", got)
@@ -53,7 +53,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletHeight",
 		func(t *testing.T) {
-			got := functions.Height()
+			got := wallet.Height()
 			if got == 0 {
 				t.Errorf("got %q", got)
 			}
@@ -63,7 +63,7 @@ func TestWallet(t *testing.T) {
 		"TestWalletCreateServiceAddress",
 		func(t *testing.T) {
 			given := exports.DEVELOPER_ADDRESS
-			got := functions.CreateServiceAddress(given)
+			got := wallet.CreateServiceAddress(given)
 			if got == "" {
 				t.Errorf("got %s", got)
 			}
@@ -72,7 +72,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletCreateServiceAddressWithoutHardcodedValue",
 		func(t *testing.T) {
-			got := functions.CreateServiceAddressWithoutHardcodedValue(functions.CreateServiceAddress(exports.DEVELOPER_ADDRESS))
+			got := wallet.CreateServiceAddressWithoutHardcodedValue(wallet.CreateServiceAddress(exports.DEVELOPER_ADDRESS))
 			if got == "" {
 				t.Errorf("got %s", got)
 			}
@@ -81,7 +81,7 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletGetTransfers",
 		func(t *testing.T) {
-			_, got := functions.GetTransfers()
+			_, got := wallet.GetTransfers()
 			if got != nil {
 				t.Errorf(got.Error())
 			}

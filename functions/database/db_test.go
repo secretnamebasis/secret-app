@@ -1,4 +1,4 @@
-package functions_test
+package database_test
 
 import (
 	"fmt"
@@ -7,16 +7,19 @@ import (
 
 	"github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions"
+
+	"github.com/secretnamebasis/secret-app/functions/crypto"
+	"github.com/secretnamebasis/secret-app/functions/database"
+	"github.com/secretnamebasis/secret-app/functions/wallet"
 	"go.etcd.io/bbolt"
 )
 
 func TestDB(t *testing.T) {
-	if functions.Connection() != true {
+	if wallet.Connection() != true {
 		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
 	}
 
-	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, functions.Sha1Sum(exports.DEVELOPER_ADDRESS))
+	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, crypto.Sha1Sum(exports.DEVELOPER_ADDRESS))
 
 	t.Run(
 		"TestCreateDB",
@@ -47,7 +50,7 @@ func TestDB(t *testing.T) {
 		func(t *testing.T) {
 
 			asserts.DBCreation(t, func(db *bbolt.DB) error {
-				err := functions.CreateBucket(db, []byte("SALE"))
+				err := database.CreateBucket(db, []byte("SALE"))
 				if err != nil {
 					return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
 				}

@@ -5,7 +5,11 @@ import (
 	"fmt"
 
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions"
+	"github.com/secretnamebasis/secret-app/functions/crypto"
+	"github.com/secretnamebasis/secret-app/functions/database"
+	"github.com/secretnamebasis/secret-app/functions/handlers"
+	"github.com/secretnamebasis/secret-app/functions/logger"
+	"github.com/secretnamebasis/secret-app/functions/wallet"
 )
 
 var (
@@ -17,15 +21,15 @@ var (
 
 func RunApp() error {
 
-	functions.Logger()
+	logger.Logger()
 
 	exports.Logs.Info(
-		functions.Echo(
+		wallet.Echo(
 			"Logger has started",
 		),
 	)
 
-	if functions.Connection() == false {
+	if wallet.Connection() == false {
 		err := errors.New("Wallet Connection Failure")
 		exports.Logs.Error(err, "Error")
 		return fmt.Errorf(
@@ -37,55 +41,55 @@ func RunApp() error {
 	db_name = fmt.Sprintf(
 		"%s_%s.bbolt.db",
 		exports.APP_NAME,
-		functions.Sha1Sum(functions.Address()),
+		crypto.Sha1Sum(wallet.Address()),
 	)
 
 	exports.Logs.Info(
-		functions.Echo(
+		wallet.Echo(
 			"ID has been created",
 		),
 	)
 
-	db, err := functions.CreateDB(db_name)
+	db, err := database.CreateDB(db_name)
 
 	if err != nil {
 		exports.Logs.Error(err, err.Error())
 	}
 
 	exports.Logs.Info(
-		functions.Echo(
+		wallet.Echo(
 			"Database has been created",
 		),
 	)
 
 	// Let's make a bucket
 	sale = []byte("SALE")
-	functions.CreateBucket(db, sale)
+	database.CreateBucket(db, sale)
 
 	exports.Logs.Info(
-		functions.Echo(
+		wallet.Echo(
 			"Sale's list initiated",
 		),
 	)
 	exports.Logs.Info(
-		functions.Echo(
+		wallet.Echo(
 			"Integrated Address with Expected Arguments: " +
-				functions.CreateServiceAddress(
-					functions.Address(),
+				wallet.CreateServiceAddress(
+					wallet.Address(),
 				),
 		),
 	)
 
 	exports.Logs.Info(
-		functions.Echo(
+		wallet.Echo(
 			"Integrated Address with Expected Arguments minus Hardcoded Value: " +
-				functions.CreateServiceAddressWithoutHardcodedValue(
-					functions.Address(),
+				wallet.CreateServiceAddressWithoutHardcodedValue(
+					wallet.Address(),
 				),
 		),
 	)
 
-	err = functions.HandleIncomingTransfers(db)
+	err = handlers.HandleIncomingTransfers(db)
 	if err != nil {
 		return err
 	}

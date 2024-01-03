@@ -1,4 +1,4 @@
-package functions
+package handlers
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/deroproject/derohe/rpc"
 	"github.com/deroproject/derohe/walletapi"
 	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions/wallet"
 
 	"go.etcd.io/bbolt"
 )
@@ -15,7 +16,7 @@ func HandleIncomingTransfers(db *bbolt.DB) error {
 	LoopActivated := false
 	exports.Logs.Info("Entering For Loop")
 	for {
-		transfers, err := GetTransfers()
+		transfers, err := wallet.GetTransfers()
 		if err != nil {
 			exports.Logs.Error(err, "Wallet Failed to Get Entries")
 		}

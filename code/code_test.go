@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/secretnamebasis/secret-app/code"
-	"github.com/secretnamebasis/secret-app/functions"
+	"github.com/secretnamebasis/secret-app/functions/crypto"
+	logger "github.com/secretnamebasis/secret-app/functions/logger"
 
 	"github.com/secretnamebasis/secret-app/exports"
 )
@@ -15,7 +16,7 @@ func TestRunApp(t *testing.T) {
 	Testing := true
 	if !Testing {
 
-		given := fmt.Sprintf("%s_%s.bbolt.db", exports.APP_NAME, functions.Sha1Sum(exports.DEVELOPER_ADDRESS))
+		given := fmt.Sprintf("%s_%s.bbolt.db", exports.APP_NAME, crypto.Sha1Sum(exports.DEVELOPER_ADDRESS))
 		defer func() {
 			err := os.Remove(given)
 			if err != nil {
@@ -31,7 +32,7 @@ func TestRunApp(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	got := code.Logger()
+	got := logger.Logger()
 	if got != nil {
 		t.Errorf("got %q", got)
 	}
