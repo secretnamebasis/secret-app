@@ -1,12 +1,12 @@
-package src_test
+package code_test
 
 import (
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/secretnamebasis/secret-app/code"
 	"github.com/secretnamebasis/secret-app/functions"
-	"github.com/secretnamebasis/secret-app/src"
 
 	"github.com/secretnamebasis/secret-app/exports"
 )
@@ -23,7 +23,7 @@ func TestRunApp(t *testing.T) {
 			}
 		}()
 
-		if src.RunApp() != nil {
+		if code.RunApp() != nil {
 			t.Errorf("App is not running when trying to run app")
 		}
 	}

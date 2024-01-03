@@ -15,7 +15,7 @@ func TestRoundTrip(t *testing.T) {
 
 	// Mock HTTP server for testing
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username, password, ok := r.BasicAuth()
+		username, Password, ok := r.BasicAuth()
 		if !ok {
 			t.Error("Basic authentication not set")
 			return
@@ -23,7 +23,7 @@ func TestRoundTrip(t *testing.T) {
 
 		// Got
 		gotUsername := username
-		gotPassword := password
+		gotPassword := Password
 
 		// Want
 		wantUsername := givenUsername
@@ -31,7 +31,7 @@ func TestRoundTrip(t *testing.T) {
 
 		// Check if Got matches Want
 		if gotUsername != wantUsername || gotPassword != wantPassword {
-			t.Errorf("Unexpected basic auth headers. Got username: %s, Want username: %s, Got password: %s,  Want password: %s",
+			t.Errorf("Unexpected basic auth headers. Got username: %s, Want username: %s, Got Password: %s,  Want Password: %s",
 				gotUsername, wantUsername, gotPassword, wantPassword)
 		}
 	}))

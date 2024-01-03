@@ -15,10 +15,10 @@ var (
 
 var (
 	Username = "secret"
-	password = "pass"
-	ip       = "192.168.12.208"
-	port     = "10104"
-	endpoint = "http://" + ip + ":" + port + "/json_rpc"
+	Password = "pass"
+	Ip       = "192.168.12.208"
+	Port     = "10104"
+	Endpoint = "http://" + Ip + ":" + Port + "/json_rpc"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 	HttpClient = &http.Client{
 		Transport: &TransportWithBasicAuth{
 			Username: Username,
-			Password: password,
+			Password: Password,
 			Base:     http.DefaultTransport,
 		},
 	}
@@ -45,7 +45,7 @@ var (
 
 var (
 	RpcClient = jsonrpc.NewClientWithOpts(
-		endpoint,
+		Endpoint,
 		&jsonrpc.RPCClientOpts{
 			HTTPClient: HttpClient,
 		},

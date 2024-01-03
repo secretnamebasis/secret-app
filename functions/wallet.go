@@ -4,13 +4,11 @@ import (
 	"fmt"
 
 	"github.com/deroproject/derohe/rpc"
-	"github.com/go-logr/logr"
 	"github.com/secretnamebasis/secret-app/exports"
 )
 
 var err error
 var clone *rpc.Address
-var logger logr.Logger = logr.Discard()
 
 func Connection() bool {
 	test := Echo(exports.Username)
