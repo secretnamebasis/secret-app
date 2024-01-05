@@ -76,22 +76,28 @@ func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 	return exports.Transfers, nil
 }
 
-func GetIncomingTransfersByHeight(h int) (rpc.Get_Transfers_Result, error) {
+func GetIncomingTransfersByHeight(h int) (*rpc.Get_Transfers_Result, error) {
+	var transfers rpc.Get_Transfers_Result
 
 	err = exports.RpcClient.CallFor(
-		&exports.Transfers,
+		&transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
 			In:         true,
 			Min_Height: uint64(h),
+			Max_Height: uint64(h),
 		},
 	)
 	if err != nil {
 		exports.Logs.Error(err, "Could not obtain gettransfers from wallet")
-		return exports.Transfers, err
+		return nil, err
 	}
 
-	return exports.Transfers, nil
+	if len(transfers.Entries) == 0 {
+		return nil, nil
+	}
+
+	return &transfers, nil
 }
 
 func CreateServiceAddress(addr string) string {

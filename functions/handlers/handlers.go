@@ -30,13 +30,13 @@ func initialLoad(db *bbolt.DB) error {
 			return err // Exit on error during initial load
 		}
 	}
-	loaded = true
+
 	return nil
 }
 
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 	var currentHeight int // Store the current wallet height
-
+	var currentTransfers *rpc.Get_Transfers_Result
 	for {
 		height := wallet.Height() // Get the current wallet height
 
@@ -44,20 +44,25 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 			currentHeight = height // Update the current height
 
 			transfers, err := wallet.GetIncomingTransfersByHeight(currentHeight)
-			if err != nil {
-				exports.Logs.Error(err, "Wallet Failed to Get Entries")
-				continue // Continue to the next iteration on error
-			}
+			if currentTransfers != transfers {
+				currentTransfers = transfers
 
-			if !*LoopActivated {
-				exports.Logs.Info("Wallet Entries are Instantiated")
-				*LoopActivated = true
-			}
-
-			for _, e := range transfers.Entries {
-				if err := IncomingTransferEntry(e, db); err != nil {
-					return err // Exit inner loop on error
+				if err != nil {
+					exports.Logs.Error(err, "Wallet Failed to Get Entries")
+					continue // Continue to the next iteration on error
 				}
+
+				if !*LoopActivated {
+					exports.Logs.Info("Wallet Entries are Instantiated")
+					*LoopActivated = true
+				}
+
+				for _, e := range transfers.Entries {
+					if err := IncomingTransferEntry(e, db); err != nil {
+						return err // Exit inner loop on error
+					}
+				}
+
 			}
 		}
 
