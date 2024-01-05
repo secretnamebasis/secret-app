@@ -7,6 +7,7 @@ const (
 	B_WALDO_WALLET_ADDRESS = "dero1qyynlr0sv0kuj3g7k7g52hu0sk0kfwzxwzatz0q66f0slcjfwv7fsqq2etgd3"
 	DEVELOPER_NAME         = "secretnamebasis"
 	APP_NAME               = "secret-app"
-	DEST_PORT              = uint64(0x1337)
+	DEST_PORT              = uint64(0x9001)
+	PONG_AMOUNT            = uint64(1337)
 	MESSAGE                = "secret loves you"
 )

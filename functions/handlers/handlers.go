@@ -34,6 +34,21 @@ func initialLoad(db *bbolt.DB) error {
 	return nil
 }
 
+func logTransferError(err error, e rpc.Entry, errorMessage string) {
+	msg := wallet.Echo(errorMessage)
+	exports.Logs.Error(err, msg, "txid", e.TXID, "dst_port", e.DestinationPort)
+}
+
+func logToBeProcessedInfo(e rpc.Entry, message string) {
+	msg := wallet.Echo(message)
+	exports.Logs.V(1).Info(msg, "txid", e.TXID, "dst_port", e.DestinationPort)
+}
+
+func logRequestInfo(e rpc.Entry, message string) {
+	msg := wallet.Echo(message)
+	exports.Logs.Info(msg, "txid", e.TXID, "dst_port", e.DestinationPort)
+}
+
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 	var currentHeight int // Store the current wallet height
 	var currentTransfers *rpc.Get_Transfers_Result
@@ -44,6 +59,15 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 			currentHeight = height // Update the current height
 
 			transfers, err := wallet.GetIncomingTransfersByHeight(currentHeight)
+
+			if transfers == nil {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
 			if currentTransfers != transfers {
 				currentTransfers = transfers
 
@@ -67,9 +91,9 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 		}
 
 		if exports.Testing {
-			time.Sleep(1 * time.Second) // Adjust the delay for testing mode
+			time.Sleep(100 * time.Millisecond)
 		} else {
-			time.Sleep(18 * time.Second) // Normal delay for production
+			time.Sleep(900 * time.Millisecond)
 		}
 	}
 }
@@ -85,6 +109,87 @@ func IncomingTransfers(db *bbolt.DB) error {
 	return processIncomingTransfers(db, &LoopActivated)
 }
 
+func isTransactionProcessed(db *bbolt.DB, bucketName string, txID string) (bool, error) {
+	var alreadyProcessed bool
+
+	err := db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(bucketName))
+		if bucket != nil {
+			if existing := bucket.Get([]byte(txID)); existing != nil {
+				alreadyProcessed = true
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return false, err // Return false and the encountered error
+	}
+
+	return alreadyProcessed, nil
+}
+func handleCoinbaseTransfer(err error, e rpc.Entry) {
+	logTransferError(err, e, "coinbase transfer")
+}
+
+func handleAlreadyProcessedTransfer(err error, e rpc.Entry) {
+	logTransferError(err, e, "already processed transfer")
+}
+
+func handleNoDstPort(err error, e rpc.Entry) {
+	logTransferError(err, e, "has no dst_port")
+}
+
+func handleRequest(e rpc.Entry, message string) {
+	if message != "" {
+		logRequestInfo(e, message)
+		return
+	}
+	switch value := e.Payload_RPC.Value(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64); value {
+	case uint64(exports.PONG_AMOUNT):
+		handleCreateRequest(e)
+	case uint64(1):
+		handleReviewRequest(e)
+	case uint64(2):
+		handleUpdateRequest(e)
+	case uint64(3):
+		handleDestroyRequest(e)
+	}
+
+}
+
+func handleCreateRequest(e rpc.Entry) {
+	exports.Logs.Info("Handling create request", "txid", e.TXID)
+}
+
+func handleReviewRequest(e rpc.Entry) {
+	exports.Logs.Info("Handling review request", "txid", e.TXID)
+}
+
+func handleUpdateRequest(e rpc.Entry) {
+	exports.Logs.Info("Handling update request", "txid", e.TXID)
+}
+
+func handleDestroyRequest(e rpc.Entry) {
+	exports.Logs.Info("Handling destroy request", "txid", e.TXID)
+}
+
+func handleToBeProcessed(e rpc.Entry) {
+	logToBeProcessedInfo(e, "to be processed")
+
+	switch dstPort := e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64); dstPort {
+	case exports.DEST_PORT:
+		handleRequest(e, "create")
+	case uint64(2):
+		handleRequest(e, "review")
+	case uint64(3):
+		handleRequest(e, "update")
+	case uint64(4):
+		handleRequest(e, "destroy")
+	default:
+		handleRequest(e, "")
+	}
+}
 func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 	// Simulating a condition that might lead to an error
 	var err = errors.New("error")
@@ -94,76 +199,26 @@ func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 	}
 
 	var already_processed bool
-	db.View(
-		func(tx *bbolt.Tx) error {
-			if b := tx.Bucket([]byte("SALE")); b != nil {
-				if ok := b.Get([]byte(e.TXID)); ok != nil { // if existing in bucket
-					already_processed = true
-				}
-			}
-			return nil
-		},
-	)
-
-	s := ""
+	already_processed, err = isTransactionProcessed(db, "SALE", e.TXID)
+	if err != nil {
+		return err
+	}
 
 	switch {
 	case e.Coinbase:
-		logTransferError(err, e, "coinbase transfer")
+		handleCoinbaseTransfer(err, e)
 
 	case already_processed:
-		logTransferError(err, e, "already processed transfer")
+		handleAlreadyProcessedTransfer(err, e)
 
 	case !e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64):
-		logTransferError(err, e, "has no dst_port")
+		handleNoDstPort(err, e)
 
 	case e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64) && exports.Expected_arguments.Has(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64):
-		logToBeProcessedInfo(e, "to be processed")
+		handleToBeProcessed(e)
 
-		create := exports.DEST_PORT
-		review := uint64(2)
-		update := uint64(3)
-		destroy := uint64(4)
-
-		// Nested switch within the above case block
-		switch dstPort := e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64); {
-		case dstPort == create:
-			s = "has create request"
-			logRequestInfo(e, s)
-
-		case dstPort == review:
-			s = "has review request"
-			logRequestInfo(e, s)
-
-		case dstPort == update:
-			s = "has update request"
-			logRequestInfo(e, s)
-
-		case dstPort == destroy:
-			s = "has destroy request"
-			logRequestInfo(e, s)
-
-		default:
-			logRequestInfo(e, s)
-
-		}
 	default:
 		return nil
 	}
 	return nil
-}
-
-func logTransferError(err error, e rpc.Entry, errorMessage string) {
-	msg := wallet.Echo(errorMessage)
-	exports.Logs.Error(err, msg, "txid", e.TXID, "dst_port", e.DestinationPort)
-}
-
-func logToBeProcessedInfo(e rpc.Entry, message string) {
-	msg := wallet.Echo(message)
-	exports.Logs.V(1).Info(msg, "txid", e.TXID, "dst_port", e.DestinationPort)
-}
-
-func logRequestInfo(e rpc.Entry, message string) {
-	msg := wallet.Echo(message)
-	exports.Logs.Info(msg, "txid", e.TXID, "dst_port", e.DestinationPort)
 }

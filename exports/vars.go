@@ -97,7 +97,7 @@ var (
 		{
 			Name:     rpc.RPC_VALUE_TRANSFER,
 			DataType: rpc.DataUint64,
-			Value:    uint64(365),
+			Value:    PONG_AMOUNT,
 		}, // in atomic units
 
 	}
