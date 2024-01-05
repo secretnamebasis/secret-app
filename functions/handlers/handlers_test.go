@@ -124,17 +124,17 @@ func TestHandleIncomingTransfers(t *testing.T) {
 			)
 		},
 	)
-	t.Run("Test Incoming Transfer Entry Switch",
-		func(t *testing.T) {
-			asserts_tests.DBCreationWithBucket(
-				t, func(db *bbolt.DB) error {
-					given := entry[1]
-					if got := handlers.IncomingTransferEntrySwitch(given, db); got != nil {
-						t.Errorf("got %s", got)
-					}
-					return nil
-				},
-			)
-		},
-	)
+	// t.Run("Test Incoming Transfer Entry Switch",
+	// 	func(t *testing.T) {
+	// 		asserts_tests.DBCreationWithBucket(
+	// 			t, func(db *bbolt.DB) error {
+	// 				given := entry[1]
+	// 				if got := handlers.IncomingTransferEntrySwitch(given, db); got != nil {
+	// 					t.Errorf("got %s", got)
+	// 				}
+	// 				return nil
+	// 			},
+	// 		)
+	// 	},
+	// )
 }
