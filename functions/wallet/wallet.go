@@ -59,13 +59,31 @@ func SendTransfer(params rpc.Transfer_Params) string {
 	return transfers.TXID
 }
 
-func GetTransfers() (rpc.Get_Transfers_Result, error) {
+func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 
 	err = exports.RpcClient.CallFor(
 		&exports.Transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
 			In: true,
+		},
+	)
+	if err != nil {
+		exports.Logs.Error(err, "Could not obtain gettransfers from wallet")
+		return exports.Transfers, err
+	}
+
+	return exports.Transfers, nil
+}
+
+func GetIncomingTransfersByHeight(h int) (rpc.Get_Transfers_Result, error) {
+
+	err = exports.RpcClient.CallFor(
+		&exports.Transfers,
+		"GetTransfers",
+		rpc.Get_Transfers_Params{
+			In:         true,
+			Min_Height: uint64(h),
 		},
 	)
 	if err != nil {

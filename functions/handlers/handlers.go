@@ -11,48 +11,73 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+var loaded bool
+
+func initialLoad(db *bbolt.DB) error {
+	if loaded {
+		return nil
+	}
+	exports.Logs.Info(wallet.Echo("Initial Loading of Wallet Entries"))
+
+	transfers, err := wallet.GetIncomingTransfers()
+	if err != nil {
+		exports.Logs.Error(err, "Wallet Failed to Get Entries")
+		return err
+	}
+
+	for _, e := range transfers.Entries {
+		if err := IncomingTransferEntry(e, db); err != nil {
+			return err // Exit on error during initial load
+		}
+	}
+	loaded = true
+	return nil
+}
+
+func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
+	var currentHeight int // Store the current wallet height
+
+	for {
+		height := wallet.Height() // Get the current wallet height
+
+		if currentHeight != height {
+			currentHeight = height // Update the current height
+
+			transfers, err := wallet.GetIncomingTransfersByHeight(currentHeight)
+			if err != nil {
+				exports.Logs.Error(err, "Wallet Failed to Get Entries")
+				continue // Continue to the next iteration on error
+			}
+
+			if !*LoopActivated {
+				exports.Logs.Info("Wallet Entries are Instantiated")
+				*LoopActivated = true
+			}
+
+			for _, e := range transfers.Entries {
+				if err := IncomingTransferEntry(e, db); err != nil {
+					return err // Exit inner loop on error
+				}
+			}
+		}
+
+		if exports.Testing {
+			time.Sleep(1 * time.Second) // Adjust the delay for testing mode
+		} else {
+			time.Sleep(18 * time.Second) // Normal delay for production
+		}
+	}
+}
+
 func IncomingTransfers(db *bbolt.DB) error {
 	LoopActivated := false
 	exports.Logs.Info(wallet.Echo("Entering For Loop"))
 
-	for {
-		transfers, err := wallet.GetTransfers()
-		if err != nil {
-			exports.Logs.Error(err, "Wallet Failed to Get Entries")
-		}
-		if !LoopActivated {
-			exports.Logs.Info("Wallet Entries are Instantiated")
-			LoopActivated = true
-		}
-
-		for _, e := range transfers.Entries {
-			if err := IncomingTransferEntry(e, db); err != nil {
-				return err // Exit inner loop on error
-			}
-		}
-		if exports.Testing {
-			time.Sleep(1 * time.Second)
-		} else {
-			time.Sleep(18 * time.Second)
-			/*
-				it would be better to do a check to see if there was a height change in the wallet
-				that way, every height is checked instead of in the likelihood that there is a transfer
-				so we need to go back and we need to look at how do we manage the first data entry, that is height change
-				once there, we can manage how we handle the heights first, and the transfer data pertinate to the height,
-				if there are no changes, then we shouldn't have to process all transfers again.
-				any change in height state will trigger the review of transfers at that height;
-				if none, no need to handle all the transfers again,
-				that's error prone,
-				 and then we have to use a database to store "seen" data ,
-				 and now we are pounding away on the database when we already have the data
-				 we don't need to review data over and over again
-				 we just need to see if there is a change, and move on.
-
-
-			*/
-		}
-
+	if err := initialLoad(db); err != nil {
+		return err // Exit on error during initial load
 	}
+
+	return processIncomingTransfers(db, &LoopActivated)
 }
 
 func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
