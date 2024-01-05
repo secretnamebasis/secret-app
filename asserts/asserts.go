@@ -1,4 +1,4 @@
-package asserts
+package asserts_tests
 
 import (
 	"fmt"
@@ -41,7 +41,7 @@ func DBCreation(t *testing.T, fn func(db *bbolt.DB) error) {
 		}
 	}()
 
-	db, err := functions.CreateDB(given)
+	db, err := database.CreateDB(given)
 	if err != nil {
 		t.Fatalf("Error creating database: %s", err)
 	}

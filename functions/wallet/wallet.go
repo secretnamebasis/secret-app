@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/deroproject/derohe/rpc"
@@ -41,6 +42,21 @@ func Address() string {
 		return err.Error()
 	}
 	return exports.Addr.String()
+}
+
+func SendTransfer(params rpc.Transfer_Params) string {
+	var transfers rpc.Transfer_Result
+	_ = exports.RpcClient.CallFor(
+		&transfers,
+		"Transfer",
+		params,
+	)
+
+	if transfers.TXID == "" {
+		err := errors.New("Empty TXID")
+		exports.Logs.Error(err, Echo("TXID is \"\" string"))
+	}
+	return transfers.TXID
 }
 
 func GetTransfers() (rpc.Get_Transfers_Result, error) {

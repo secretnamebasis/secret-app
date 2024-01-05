@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/deroproject/derohe/rpc"
+	"github.com/google/uuid"
 
 	"github.com/ybbus/jsonrpc"
 )
@@ -69,7 +70,7 @@ var (
 		{
 			Name:     rpc.RPC_COMMENT,
 			DataType: rpc.DataString,
-			Value:    "Successfully purchased pong (this could be serial/license key or download link or further)",
+			Value:    uuid.New().String(),
 		},
 	}
 )
@@ -96,7 +97,7 @@ var (
 		{
 			Name:     rpc.RPC_VALUE_TRANSFER,
 			DataType: rpc.DataUint64,
-			Value:    uint64(12345),
+			Value:    uint64(365),
 		}, // in atomic units
 
 	}

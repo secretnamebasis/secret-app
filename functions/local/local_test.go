@@ -3,7 +3,7 @@ package local_test
 import (
 	"testing"
 
-	"github.com/secretnamebasis/secret-app/asserts"
+	asserts_tests "github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/functions/local"
 )
 
@@ -18,7 +18,7 @@ func TestSayHelloVar(t *testing.T) {
 	given := "secret"
 	got := local.SayHello(given)
 	want := "Hello, secret"
-	asserts.CorrectMessage(t, got, want)
+	asserts_tests.CorrectMessage(t, got, want)
 }
 
 func TestPing(t *testing.T) {

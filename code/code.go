@@ -32,7 +32,7 @@ func RunApp() error {
 
 	if wallet.Connection() == false {
 		err := errors.New("Wallet Connection Failure")
-		exports.Logs.Error(err, "Error")
+		exports.Logs.Error(err, wallet.Echo("Error"))
 		return fmt.Errorf(
 			"Failed to establish wallet connection",
 		)
@@ -42,12 +42,14 @@ func RunApp() error {
 	db_name = fmt.Sprintf(
 		"%s_%s.bbolt.db",
 		exports.APP_NAME,
-		crypto.Sha1Sum(wallet.Address()),
+		crypto.Sha1Sum(
+			wallet.Address(),
+		),
 	)
 
 	exports.Logs.Info(
 		wallet.Echo(
-			"ID has been created",
+			"ID Created",
 		),
 	)
 
@@ -57,24 +59,11 @@ func RunApp() error {
 		exports.Logs.Error(err, err.Error())
 	}
 
-	exports.Logs.Info(
-		wallet.
-			Echo(
-				"Database has been created",
-			),
-	)
-
 	// Let's make a bucket
 	sale = []byte("SALE")
 	database.
 		CreateBucket(db, sale)
 
-	exports.Logs.Info(
-		wallet.
-			Echo(
-				"Sale's list initiated",
-			),
-	)
 	exports.Logs.Info(
 		wallet.
 			Echo(
@@ -88,19 +77,16 @@ func RunApp() error {
 	)
 
 	exports.Logs.Info(
-		wallet.
-			Echo(
-				"Integrated Address with Expected Arguments minus Hardcoded Value: " +
-					wallet.
-						CreateServiceAddressWithoutHardcodedValue(
-							wallet.
-								Address(),
-						),
-			),
+		wallet.Echo(
+			"Integrated Address with Expected Arguments minus Hardcoded Value: " +
+				wallet.CreateServiceAddressWithoutHardcodedValue(
+					wallet.Address(),
+				),
+		),
 	)
 
 	handlers.
-		HandleIncomingTransfers(db)
+		IncomingTransfers(db)
 
 	return nil // Stop the loop and return nil
 }

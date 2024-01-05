@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/secretnamebasis/secret-app/asserts"
+	asserts_tests "github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/exports"
 
 	"github.com/secretnamebasis/secret-app/functions/crypto"
@@ -24,7 +24,7 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestCreateDB",
 		func(t *testing.T) {
-			asserts.DBCreation(t, func(db *bbolt.DB) error {
+			asserts_tests.DBCreation(t, func(db *bbolt.DB) error {
 				_, err := os.Stat(given)
 				if err != nil {
 					return fmt.Errorf("Error checking file existence: %s", err)
@@ -36,7 +36,7 @@ func TestDB(t *testing.T) {
 	t.Run(
 		"TestUpdateDB",
 		func(t *testing.T) {
-			asserts.DBCreation(t, func(db *bbolt.DB) error {
+			asserts_tests.DBCreation(t, func(db *bbolt.DB) error {
 				return db.Update(func(tx *bbolt.Tx) error {
 					_, err := tx.CreateBucketIfNotExists([]byte("SALE"))
 					return err
@@ -49,13 +49,13 @@ func TestDB(t *testing.T) {
 		"TestCreateSalesBucket",
 		func(t *testing.T) {
 
-			asserts.DBCreation(t, func(db *bbolt.DB) error {
+			asserts_tests.DBCreation(t, func(db *bbolt.DB) error {
 				err := database.CreateBucket(db, []byte("SALE"))
 				if err != nil {
 					return fmt.Errorf("Error creating 'SALE' bucket: %s", err)
 				}
 
-				err = asserts.BucketExists(t, db, []byte("SALE"))
+				err = asserts_tests.BucketExists(t, db, []byte("SALE"))
 				if err != nil {
 					return err
 				}
