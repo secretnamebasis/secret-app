@@ -14,7 +14,7 @@ import (
 
 var (
 	db_name string
-	sale    []byte
+	create  []byte
 
 	LoopActivated bool
 )
@@ -24,10 +24,9 @@ func RunApp() error {
 	logger.Logger()
 
 	exports.Logs.Info(
-		wallet.
-			Echo(
-				"Logger has started",
-			),
+		wallet.Echo(
+			"Logger has started",
+		),
 	)
 
 	if wallet.Connection() == false {
@@ -60,20 +59,17 @@ func RunApp() error {
 	}
 
 	// Let's make a bucket
-	sale = []byte("SALE")
+	create = []byte("create")
 	database.
-		CreateBucket(db, sale)
+		CreateBucket(db, create)
 
 	exports.Logs.Info(
-		wallet.
-			Echo(
-				"Integrated Address with Expected Arguments: " +
-					wallet.
-						CreateServiceAddress(
-							wallet.
-								Address(),
-						),
-			),
+		wallet.Echo(
+			"Integrated Address with Expected Arguments: " +
+				wallet.CreateServiceAddress(
+					wallet.Address(),
+				),
+		),
 	)
 
 	exports.Logs.Info(

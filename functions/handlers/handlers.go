@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
@@ -50,51 +51,51 @@ func logRequestInfo(e rpc.Entry, message string) {
 }
 
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
-	var currentHeight int // Store the current wallet height
+	var currentHeight int
 	var currentTransfers *rpc.Get_Transfers_Result
+
+	checkAndProcess := func(transfers *rpc.Get_Transfers_Result) error {
+		if currentTransfers != transfers {
+			currentTransfers = transfers
+
+			if !*LoopActivated {
+				exports.Logs.Info("Wallet Entries are Instantiated")
+				*LoopActivated = true
+			}
+
+			for _, e := range transfers.Entries {
+				if err := IncomingTransferEntry(e, db); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
 	for {
-		height := wallet.Height() // Get the current wallet height
+		height := wallet.Height()
 
 		if currentHeight != height {
-			currentHeight = height // Update the current height
+			currentHeight = height
 
 			transfers, err := wallet.GetIncomingTransfersByHeight(currentHeight)
-
 			if transfers == nil {
 				continue
 			}
-
 			if err != nil {
 				return err
 			}
 
-			if currentTransfers != transfers {
-				currentTransfers = transfers
-
-				if err != nil {
-					exports.Logs.Error(err, "Wallet Failed to Get Entries")
-					continue // Continue to the next iteration on error
-				}
-
-				if !*LoopActivated {
-					exports.Logs.Info("Wallet Entries are Instantiated")
-					*LoopActivated = true
-				}
-
-				for _, e := range transfers.Entries {
-					if err := IncomingTransferEntry(e, db); err != nil {
-						return err // Exit inner loop on error
-					}
-				}
-
+			if err := checkAndProcess(transfers); err != nil {
+				return err
 			}
 		}
 
+		sleepDuration := 1 * time.Second
 		if exports.Testing {
-			time.Sleep(100 * time.Millisecond)
-		} else {
-			time.Sleep(900 * time.Millisecond)
+			sleepDuration = 100 * time.Millisecond
 		}
+		time.Sleep(sleepDuration)
 	}
 }
 
@@ -109,13 +110,13 @@ func IncomingTransfers(db *bbolt.DB) error {
 	return processIncomingTransfers(db, &LoopActivated)
 }
 
-func isTransactionProcessed(db *bbolt.DB, bucketName string, txID string) (bool, error) {
+func isTransactionProcessed(db *bbolt.DB, bucketName string, TXID string) (bool, error) {
 	var alreadyProcessed bool
 
 	err := db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucketName))
 		if bucket != nil {
-			if existing := bucket.Get([]byte(txID)); existing != nil {
+			if existing := bucket.Get([]byte(TXID)); existing != nil {
 				alreadyProcessed = true
 			}
 		}
@@ -140,14 +141,13 @@ func handleNoDstPort(err error, e rpc.Entry) {
 	logTransferError(err, e, "has no dst_port")
 }
 
-func handleRequest(e rpc.Entry, message string) {
+func handleRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	if message != "" {
 		logRequestInfo(e, message)
-		return
 	}
-	switch value := e.Payload_RPC.Value(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64); value {
+	switch value := e.Amount; value {
 	case uint64(exports.PONG_AMOUNT):
-		handleCreateRequest(e)
+		handleCreateRequest(e, message, db)
 	case uint64(1):
 		handleReviewRequest(e)
 	case uint64(2):
@@ -158,8 +158,57 @@ func handleRequest(e rpc.Entry, message string) {
 
 }
 
-func handleCreateRequest(e rpc.Entry) {
-	exports.Logs.Info("Handling create request", "txid", e.TXID)
+func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
+	exports.Logs.Info(
+		wallet.Echo("Handling create request"),
+		"txid", e.TXID,
+		"amount", e.Amount,
+		"dst_port", e.DestinationPort,
+		"comment", e.Payload_RPC.Value(rpc.RPC_COMMENT, rpc.DataString),
+		"reply_back", e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress),
+	)
+
+	what := "secret loves you too"
+
+	where := e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress).(rpc.Address).String()
+
+	reply := rpc.Transfer_Params{
+		Transfers: []rpc.Transfer{
+			{
+				Destination: where,
+				Amount:      uint64(1),
+				Payload_RPC: rpc.Arguments{
+					{
+						Name:     rpc.RPC_DESTINATION_PORT,
+						DataType: rpc.DataUint64,
+						Value:    uint64(0),
+					},
+					{
+						Name:     rpc.RPC_SOURCE_PORT,
+						DataType: rpc.DataUint64,
+						Value:    exports.DEST_PORT,
+					},
+					{
+						Name:     rpc.RPC_COMMENT,
+						DataType: rpc.DataString,
+						Value:    what,
+					},
+				},
+			},
+		},
+	}
+	result := wallet.SendTransfer(reply)
+
+	// update database
+	err := db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(message))
+		return b.Put([]byte(e.TXID), []byte("done"))
+	})
+	if err != nil {
+		exports.Logs.Error(err, "err updating db")
+	} else {
+		exports.Logs.Info("ping replied successfully with pong ", "result", result)
+	}
 }
 
 func handleReviewRequest(e rpc.Entry) {
@@ -174,20 +223,20 @@ func handleDestroyRequest(e rpc.Entry) {
 	exports.Logs.Info("Handling destroy request", "txid", e.TXID)
 }
 
-func handleToBeProcessed(e rpc.Entry) {
+func handleToBeProcessed(e rpc.Entry, db *bbolt.DB) {
 	logToBeProcessedInfo(e, "to be processed")
 
 	switch dstPort := e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64); dstPort {
 	case exports.DEST_PORT:
-		handleRequest(e, "create")
+		handleRequest(e, "create", db) //
 	case uint64(2):
-		handleRequest(e, "review")
+		handleRequest(e, "review", db)
 	case uint64(3):
-		handleRequest(e, "update")
+		handleRequest(e, "update", db)
 	case uint64(4):
-		handleRequest(e, "destroy")
+		handleRequest(e, "destroy", db)
 	default:
-		handleRequest(e, "")
+		handleRequest(e, "", db)
 	}
 }
 func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
@@ -196,6 +245,10 @@ func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 
 	if e.Amount <= 0 {
 		exports.Logs.Error(err, "amount is less than 0", "txid", e.TXID, "dst_port", e.DestinationPort)
+	}
+
+	if !e.Payload_RPC.Has(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress) {
+		exports.Logs.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
 	}
 
 	var already_processed bool
@@ -215,7 +268,7 @@ func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 		handleNoDstPort(err, e)
 
 	case e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64) && exports.Expected_arguments.Has(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64):
-		handleToBeProcessed(e)
+		handleToBeProcessed(e, db)
 
 	default:
 		return nil
