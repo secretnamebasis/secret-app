@@ -15,6 +15,7 @@ var (
 )
 
 var (
+	Pong     = "You have purchased a really cool link"
 	Username = "secret"
 	Password = "pass"
 	Ip       = "192.168.12.208"
@@ -23,7 +24,6 @@ var (
 )
 
 var (
-	Pong         = "You have purchased a really cool link"
 	Welcome      string
 	WalletHeight *rpc.GetHeight_Result
 	Addr         *rpc.Address

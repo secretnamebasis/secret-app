@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
@@ -13,6 +12,7 @@ import (
 )
 
 var loaded bool
+var currentHeight int
 
 func initialLoad(db *bbolt.DB) error {
 	if loaded {
@@ -51,7 +51,7 @@ func logRequestInfo(e rpc.Entry, message string) {
 }
 
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
-	var currentHeight int
+
 	var currentTransfers *rpc.Get_Transfers_Result
 
 	checkAndProcess := func(transfers *rpc.Get_Transfers_Result) error {
@@ -59,7 +59,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 			currentTransfers = transfers
 
 			if !*LoopActivated {
-				exports.Logs.Info("Wallet Entries are Instantiated")
+
 				*LoopActivated = true
 			}
 
@@ -138,37 +138,35 @@ func handleAlreadyProcessedTransfer(err error, e rpc.Entry) {
 }
 
 func handleNoDstPort(err error, e rpc.Entry) {
-	logTransferError(err, e, "has no dst_port")
+	// logTransferError(err, e, "has no dst_port")
 }
 
 func handleRequest(e rpc.Entry, message string, db *bbolt.DB) {
-	if message != "" {
-		logRequestInfo(e, message)
-	}
+	// if message != "" {
+	// 	logRequestInfo(e, message)
+	// }
 	switch value := e.Amount; value {
 	case uint64(exports.PONG_AMOUNT):
 		handleCreateRequest(e, message, db)
 	case uint64(1):
-		handleReviewRequest(e)
+		handleReviewRequest(e, message, db)
 	case uint64(2):
-		handleUpdateRequest(e)
+		handleUpdateRequest(e, message, db)
 	case uint64(3):
-		handleDestroyRequest(e)
+		handleDestroyRequest(e, message, db)
 	}
 
 }
 
 func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info(
-		wallet.Echo("Handling create request"),
+		wallet.Echo(message+" request"),
 		"txid", e.TXID,
 		"amount", e.Amount,
 		"dst_port", e.DestinationPort,
 		"comment", e.Payload_RPC.Value(rpc.RPC_COMMENT, rpc.DataString),
 		"reply_back", e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress),
 	)
-
-	what := "secret loves you too"
 
 	where := e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress).(rpc.Address).String()
 
@@ -191,7 +189,7 @@ func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 					{
 						Name:     rpc.RPC_COMMENT,
 						DataType: rpc.DataString,
-						Value:    what,
+						Value:    exports.Pong,
 					},
 				},
 			},
@@ -200,26 +198,34 @@ func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	result := wallet.SendTransfer(reply)
 
 	// update database
-	err := db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(message))
-		return b.Put([]byte(e.TXID), []byte("done"))
-	})
-	if err != nil {
-		exports.Logs.Error(err, "err updating db")
-	} else {
-		exports.Logs.Info("ping replied successfully with pong ", "result", result)
+	if result != "" {
+		// Perform further actions based on the result
+		// ...
+
+		// If processing is successful, update the database
+		err := db.Update(func(tx *bbolt.Tx) error {
+			b := tx.Bucket([]byte(message))
+			return b.Put([]byte(e.TXID), []byte("done"))
+		})
+		if err != nil {
+			exports.Logs.Error(err, "err updating db")
+			// Handle the error in updating the database
+		} else {
+			exports.Logs.Info("ping replied successfully with pong ", "result", result)
+			// Log the successful completion
+		}
 	}
 }
 
-func handleReviewRequest(e rpc.Entry) {
+func handleReviewRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info("Handling review request", "txid", e.TXID)
 }
 
-func handleUpdateRequest(e rpc.Entry) {
+func handleUpdateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info("Handling update request", "txid", e.TXID)
 }
 
-func handleDestroyRequest(e rpc.Entry) {
+func handleDestroyRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info("Handling destroy request", "txid", e.TXID)
 }
 
@@ -248,11 +254,11 @@ func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 	}
 
 	if !e.Payload_RPC.Has(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress) {
-		exports.Logs.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
+		// exports.Logs.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
 	}
 
 	var already_processed bool
-	already_processed, err = isTransactionProcessed(db, "SALE", e.TXID)
+	already_processed, err = isTransactionProcessed(db, "create", e.TXID)
 	if err != nil {
 		return err
 	}
