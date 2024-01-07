@@ -10,6 +10,7 @@ import (
 	"github.com/secretnamebasis/secret-app/functions/handlers"
 	logger "github.com/secretnamebasis/secret-app/functions/logger"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 )
 
 var (
@@ -31,10 +32,17 @@ func RunApp() error {
 
 	if dero.Connection() == false {
 		err := errors.New("Wallet Connection Failure")
-		exports.Logs.Error(err, dero.Echo("Error"))
+		exports.Logs.Error(err, "Error")
 		return fmt.Errorf(
 			"Failed to establish wallet connection",
 		)
+	}
+
+	if monero.Height() <= 0 {
+		err := errors.New("Wallet Connection Failure")
+		exports.Logs.Error(err, dero.Echo("Error"))
+		return fmt.Errorf(
+			"Failed to establish wallet connection")
 	}
 
 	// Let's make a database
@@ -52,7 +60,13 @@ func RunApp() error {
 		),
 	)
 
-	db, err := database.CreateDB(db_name)
+	db, err := database.CreateDB(db_name) // database management might become a serious issue
+	/*
+		I mean, I made the database because capt demonstrates it, but when I play the thought out...
+		the wallet is the freaking database, why the hell do I need to make another one?
+		I think that having the ability to interact with the wallet database would be nice...
+		but I am too smoothe brained to figure that out right now.
+	*/
 
 	if err != nil {
 		exports.Logs.Error(err, err.Error())
