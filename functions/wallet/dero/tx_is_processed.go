@@ -1,4 +1,4 @@
-package handlers
+package dero
 
 import "go.etcd.io/bbolt"
 

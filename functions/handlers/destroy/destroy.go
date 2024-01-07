@@ -1,4 +1,4 @@
-package handlers
+package destroy
 
 import (
 	"github.com/deroproject/derohe/rpc"
@@ -6,6 +6,6 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func handleDestroyRequest(e rpc.Entry, message string, db *bbolt.DB) {
+func Request(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info("Handling destroy request", "txid", e.TXID)
 }

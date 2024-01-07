@@ -15,8 +15,16 @@ func TestMoneroWallet(t *testing.T) {
 			}
 		},
 	)
-	t.Run(
-		"Test Wallet Integrated Address",
+	t.Run("Test Monero Transfers",
+		func(t *testing.T) {
+			_, got := monero.GetIncomingTransfers()
+			if got != nil {
+				t.Errorf(got.Error())
+			}
+		},
+	)
+
+	t.Run("Test Wallet Integrated Address",
 		func(t *testing.T) {
 			result, err := monero.MakeIntegratedAddress()
 			if err != nil {

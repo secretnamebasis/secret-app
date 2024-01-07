@@ -1,4 +1,4 @@
-package handlers
+package wallet
 
 import (
 	"strconv"
@@ -8,10 +8,14 @@ import (
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/logger"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 	"go.etcd.io/bbolt"
 )
 
-func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
+var currentDeroHeight int
+var currentMoneroHeight int
+
+func IncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 	checkAndProcess := func(transfers *rpc.Get_Transfers_Result) error {
 
@@ -21,7 +25,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 		}
 
 		for _, e := range transfers.Entries {
-			if err := IncomingTransferEntry(e, db); err != nil {
+			if err := dero.IncomingTransferEntry(e, db); err != nil {
 				return err
 			}
 		}
@@ -30,14 +34,21 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 	}
 
 	for {
-		height := dero.Height()
+		deroHeight := dero.Height()
 
-		if currentHeight != height {
+		moneroHeight := monero.Height()
 
-			currentHeight = height
-			logger.HeightInfo(strconv.Itoa(dero.Height()))
+		if currentDeroHeight != deroHeight {
+			currentDeroHeight = deroHeight
 
-			transfers, err := dero.GetIncomingTransfersByHeight(currentHeight)
+			if currentMoneroHeight != moneroHeight {
+				currentMoneroHeight = moneroHeight
+				logger.HeightInfo("Monero Height:" + strconv.Itoa(monero.Height()))
+
+			}
+
+			logger.HeightInfo("Dero Height:" + strconv.Itoa(dero.Height()))
+			transfers, err := dero.GetIncomingTransfersByHeight(dero.Height())
 
 			if transfers == nil {
 				continue

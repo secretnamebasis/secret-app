@@ -31,7 +31,6 @@ var (
 	Addr_result rpc.GetAddress_Result
 	// default discard all logs
 
-	Transfers rpc.Get_Transfers_Result
 )
 
 var (

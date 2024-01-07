@@ -1,27 +1,24 @@
-package handlers
+package dero
 
 import (
 	"errors"
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
-
 	"go.etcd.io/bbolt"
 )
 
 var loaded bool
-var currentHeight int
 
 func IncomingTransfers(db *bbolt.DB) error {
 	LoopActivated := false
-	exports.Logs.Info(dero.Echo("Entering For Loop"))
+	exports.Logs.Info(Echo("Entering For Loop"))
 
-	if err := initialLoad(db); err != nil {
+	if err := Load(db); err != nil {
 		return err // Exit on error during initial load
 	}
 
-	return processIncomingTransfers(db, &LoopActivated)
+	return IncomingTransfers(db, &LoopActivated)
 }
 
 func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
@@ -44,16 +41,16 @@ func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 
 	switch {
 	case e.Coinbase:
-		handleCoinbaseTransfer(err, e)
+		CoinbaseTransfer(err, e)
 
 	case already_processed:
-		handleAlreadyProcessedTransfer(err, e)
+		AlreadyProcessedTransfer(err, e)
 
 	case !e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64):
-		handleNoDstPort(err, e)
+		NoDstPort(err, e)
 
 	case e.Payload_RPC.Has(rpc.RPC_DESTINATION_PORT, rpc.DataUint64) && exports.Expected_arguments.Has(rpc.RPC_VALUE_TRANSFER, rpc.DataUint64):
-		handleToBeProcessed(e, db)
+		ToBeProcessed(e, db)
 
 	default:
 		return nil

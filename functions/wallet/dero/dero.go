@@ -10,6 +10,7 @@ import (
 
 var err error
 var clone *rpc.Address
+var transfers rpc.Get_Transfers_Result
 
 func Connection() bool {
 	test := Echo(exports.Username)
@@ -62,7 +63,7 @@ func SendTransfer(params rpc.Transfer_Params) string {
 func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 
 	err = exports.RpcClient.CallFor(
-		&exports.Transfers,
+		&transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
 			In: true,
@@ -70,10 +71,10 @@ func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 	)
 	if err != nil {
 		exports.Logs.Error(err, "Could not obtain gettransfers from wallet")
-		return exports.Transfers, err
+		return transfers, err
 	}
 
-	return exports.Transfers, nil
+	return transfers, nil
 }
 
 func GetIncomingTransfersByHeight(h int) (*rpc.Get_Transfers_Result, error) {

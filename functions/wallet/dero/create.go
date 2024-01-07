@@ -1,23 +1,22 @@
-package create
+package dero
 
 import (
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/logger"
-	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 	"go.etcd.io/bbolt"
 )
 
-func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
-	logger.RequestInfo(e, message+" request")
+func Request(e rpc.Entry, message string, db *bbolt.DB) {
+	RequestInfo(e, message+" request")
 
 	reply := createTransfer(e)
-	result := dero.SendTransfer(reply)
+	result := SendTransfer(reply)
 
 	if result != "" {
 		updateDatabaseOnSuccess(db, message, e.TXID)
-		exports.Logs.Info(dero.Echo("ping replied successfully with pong "), "result", result)
+		exports.Logs.Info(Echo("ping replied successfully with pong "), "result", result)
 		// Log the successful completion
 	}
 }
@@ -79,7 +78,7 @@ func updateDatabaseOnSuccess(db *bbolt.DB, message string, txID string) {
 		return b.Put([]byte(txID), []byte("done"))
 	})
 	if err != nil {
-		exports.Logs.Error(err, dero.Echo("err updating db"))
+		exports.Logs.Error(err, Echo("err updating db"))
 		// Handle the error in updating the database
 
 	}

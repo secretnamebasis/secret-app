@@ -16,6 +16,40 @@ var (
 	port       = "28088"
 )
 
+type Transfer struct {
+	Address         string   `json:"address"`
+	Amount          uint64   `json:"amount"`
+	Amounts         []uint64 `json:"amounts"`
+	Confirmations   uint64   `json:"confirmations"`
+	DoubleSpendSeen bool     `json:"double_spend_seen"`
+	Fee             uint64   `json:"fee"`
+	Height          uint64   `json:"height"`
+	Locked          bool     `json:"locked"`
+	Note            string   `json:"note"`
+	PaymentID       string   `json:"payment_id"`
+	SubAddrIndex    struct {
+		Major uint64 `json:"major"`
+		Minor uint64 `json:"minor"`
+	} `json:"subaddr_index"`
+	SubAddrIndices []struct {
+		Major uint64 `json:"major"`
+		Minor uint64 `json:"minor"`
+	} `json:"subaddr_indices"`
+	SuggestedConfirmationsThreshold uint64 `json:"suggested_confirmations_threshold"`
+	Timestamp                       uint64 `json:"timestamp"`
+	TxID                            string `json:"txid"`
+	Type                            string `json:"type"`
+	UnlockTime                      uint64 `json:"unlock_time"`
+}
+
+type transferResult struct {
+	Incoming []Transfer `json:"in"`
+	Outgoing []Transfer `json:"out"`
+	Pending  []Transfer `json:"pending"`
+	Failed   []Transfer `json:"failed"`
+	Pool     []Transfer `json:"pool"`
+}
+
 // IntegratedAddressResponse represents the structure of the JSON response for an integrated address
 type IntegratedAddressResponse struct {
 	ID      string `json:"id"`
@@ -37,6 +71,12 @@ type HeightResponse struct {
 		Height uint64 `json:"height"`
 	} `json:"result"`
 }
+
+var (
+	in = true
+
+	accountIndex uint64
+)
 
 func Height() int {
 	data := map[string]interface{}{
@@ -128,4 +168,37 @@ func createHTTPRequest(method, endpoint string, body []byte) (*http.Request, err
 	}
 	request.Header.Set("Content-Type", "application/json")
 	return request, nil
+}
+
+func GetIncomingTransfers() (*transferResult, error) {
+	data := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "0",
+		"method":  "get_transfers",
+		"params": map[string]interface{}{
+			"in": in,
+
+			"account_index": accountIndex,
+		},
+	}
+	jsonData, _ := json.Marshal(data)
+
+	request, err := createHTTPRequest("POST", "json_rpc", jsonData)
+	if err != nil {
+		return nil, err
+	}
+	defer request.Body.Close()
+
+	response, err := makeRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	var transferResponse transferResult
+	if err := json.NewDecoder(response.Body).Decode(&transferResponse); err != nil {
+		return nil, err
+	}
+
+	return &transferResponse, nil
 }
