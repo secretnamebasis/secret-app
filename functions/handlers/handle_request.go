@@ -12,7 +12,7 @@ func handleRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	// }
 	switch value := e.Amount; value {
 	case uint64(exports.PONG_AMOUNT):
-		handleCreateRequest(e, message, db)
+		create.handleCreateRequest(e, message, db)
 	case uint64(1):
 		handleReviewRequest(e, message, db)
 	case uint64(2):
