@@ -6,7 +6,7 @@ import (
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/wallet"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 
 	"go.etcd.io/bbolt"
 )
@@ -18,9 +18,9 @@ func initialLoad(db *bbolt.DB) error {
 	if loaded {
 		return nil
 	}
-	exports.Logs.Info(wallet.Echo("Initial Loading of Wallet Entries"))
+	exports.Logs.Info(dero.Echo("Initial Loading of Wallet Entries"))
 
-	transfers, err := wallet.GetIncomingTransfers()
+	transfers, err := dero.GetIncomingTransfers()
 	if err != nil {
 		exports.Logs.Error(err, "Wallet Failed to Get Entries")
 		return err
@@ -36,17 +36,17 @@ func initialLoad(db *bbolt.DB) error {
 }
 
 func logTransferError(err error, e rpc.Entry, errorMessage string) {
-	msg := wallet.Echo(errorMessage)
+	msg := dero.Echo(errorMessage)
 	exports.Logs.Error(err, msg, "txid", e.TXID, "dst_port", e.DestinationPort)
 }
 
 func logToBeProcessedInfo(e rpc.Entry, message string) {
-	msg := wallet.Echo(message)
+	msg := dero.Echo(message)
 	exports.Logs.V(1).Info(msg, "txid", e.TXID, "dst_port", e.DestinationPort)
 }
 
 func logRequestInfo(e rpc.Entry, message string) {
-	msg := wallet.Echo(message)
+	msg := dero.Echo(message)
 	exports.Logs.Info(msg, "txid", e.TXID, "dst_port", e.DestinationPort)
 }
 
@@ -73,12 +73,12 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 	}
 
 	for {
-		height := wallet.Height()
+		height := dero.Height()
 
 		if currentHeight != height {
 			currentHeight = height
 
-			transfers, err := wallet.GetIncomingTransfersByHeight(currentHeight)
+			transfers, err := dero.GetIncomingTransfersByHeight(currentHeight)
 			if transfers == nil {
 				continue
 			}
@@ -101,7 +101,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 func IncomingTransfers(db *bbolt.DB) error {
 	LoopActivated := false
-	exports.Logs.Info(wallet.Echo("Entering For Loop"))
+	exports.Logs.Info(dero.Echo("Entering For Loop"))
 
 	if err := initialLoad(db); err != nil {
 		return err // Exit on error during initial load
@@ -160,7 +160,7 @@ func handleRequest(e rpc.Entry, message string, db *bbolt.DB) {
 
 func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info(
-		wallet.Echo(message+" request"),
+		dero.Echo(message+" request"),
 		"txid", e.TXID,
 		"amount", e.Amount,
 		"dst_port", e.DestinationPort,
@@ -195,7 +195,7 @@ func handleCreateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 			},
 		},
 	}
-	result := wallet.SendTransfer(reply)
+	result := dero.SendTransfer(reply)
 
 	// update database
 	if result != "" {

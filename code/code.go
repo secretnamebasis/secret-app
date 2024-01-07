@@ -9,7 +9,7 @@ import (
 	"github.com/secretnamebasis/secret-app/functions/database"
 	"github.com/secretnamebasis/secret-app/functions/handlers"
 	logger "github.com/secretnamebasis/secret-app/functions/logger"
-	"github.com/secretnamebasis/secret-app/functions/wallet"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 )
 
 var (
@@ -24,14 +24,14 @@ func RunApp() error {
 	logger.Logger()
 
 	exports.Logs.Info(
-		wallet.Echo(
+		dero.Echo(
 			"Logger has started",
 		),
 	)
 
-	if wallet.Connection() == false {
+	if dero.Connection() == false {
 		err := errors.New("Wallet Connection Failure")
-		exports.Logs.Error(err, wallet.Echo("Error"))
+		exports.Logs.Error(err, dero.Echo("Error"))
 		return fmt.Errorf(
 			"Failed to establish wallet connection",
 		)
@@ -42,12 +42,12 @@ func RunApp() error {
 		"%s_%s.bbolt.db",
 		exports.APP_NAME,
 		crypto.Sha1Sum(
-			wallet.Address(),
+			dero.Address(),
 		),
 	)
 
 	exports.Logs.Info(
-		wallet.Echo(
+		dero.Echo(
 			"ID Created",
 		),
 	)
@@ -64,19 +64,19 @@ func RunApp() error {
 		CreateBucket(db, create)
 
 	exports.Logs.Info(
-		wallet.Echo(
+		dero.Echo(
 			"Integrated Address with Expected Arguments: " +
-				wallet.CreateServiceAddress(
-					wallet.Address(),
+				dero.CreateServiceAddress(
+					dero.Address(),
 				),
 		),
 	)
 
 	exports.Logs.Info(
-		wallet.Echo(
+		dero.Echo(
 			"Integrated Address with Expected Arguments minus Hardcoded Value: " +
-				wallet.CreateServiceAddressWithoutHardcodedValue(
-					wallet.Address(),
+				dero.CreateServiceAddressWithoutHardcodedValue(
+					dero.Address(),
 				),
 		),
 	)

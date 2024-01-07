@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/wallet"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"go.etcd.io/bbolt"
 )
 
@@ -13,7 +13,7 @@ func CreateBucket(db *bbolt.DB, bucketName []byte) error {
 		_, err := tx.CreateBucketIfNotExists(bucketName)
 
 		exports.Logs.Info(
-			wallet.
+			dero.
 				Echo(
 					"Sales Initiated",
 				),
@@ -31,7 +31,7 @@ func CreateDB(db_name string) (*bbolt.DB, error) {
 	}
 
 	exports.Logs.Info(
-		wallet.
+		dero.
 			Echo(
 				"Database Created",
 			),

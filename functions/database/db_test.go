@@ -10,12 +10,12 @@ import (
 
 	"github.com/secretnamebasis/secret-app/functions/crypto"
 	"github.com/secretnamebasis/secret-app/functions/database"
-	"github.com/secretnamebasis/secret-app/functions/wallet"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"go.etcd.io/bbolt"
 )
 
 func TestDB(t *testing.T) {
-	if wallet.Connection() != true {
+	if dero.Connection() != true {
 		t.Skip("Skipping wallet-related tests. Wallet connection failed.")
 	}
 
