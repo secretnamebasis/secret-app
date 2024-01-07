@@ -1,7 +1,10 @@
 package handlers
 
-import "github.com/deroproject/derohe/rpc"
+import (
+	"github.com/deroproject/derohe/rpc"
+	"github.com/secretnamebasis/secret-app/functions/logger"
+)
 
 func handleCoinbaseTransfer(err error, e rpc.Entry) {
-	logTransferError(err, e, "coinbase transfer")
+	logger.TransferError(err, e, "coinbase transfer")
 }

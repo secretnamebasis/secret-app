@@ -3,11 +3,12 @@ package handlers
 import (
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions/logger"
 	"go.etcd.io/bbolt"
 )
 
 func handleToBeProcessed(e rpc.Entry, db *bbolt.DB) {
-	logToBeProcessedInfo(e, "to be processed")
+	logger.ToBeProcessedInfo(e, "to be processed")
 
 	switch dstPort := e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64); dstPort {
 	case exports.DEST_PORT:
