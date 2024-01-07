@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions/logger"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"go.etcd.io/bbolt"
 )
@@ -31,12 +33,16 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 		height := dero.Height()
 
 		if currentHeight != height {
+
 			currentHeight = height
+			logger.HeightInfo(strconv.Itoa(dero.Height()))
 
 			transfers, err := dero.GetIncomingTransfersByHeight(currentHeight)
+
 			if transfers == nil {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
