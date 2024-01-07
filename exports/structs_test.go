@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions/requests"
 )
 
 func TestRoundTrip(t *testing.T) {
@@ -37,24 +37,6 @@ func TestRoundTrip(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	// Create a TransportWithBasicAuth instance
-	authTransport := &exports.TransportWithBasicAuth{
-		Username: givenUsername,
-		Password: givenPassword,
-		Base:     http.DefaultTransport,
-	}
-
-	// Create a request
-	req, err := http.NewRequest("GET", ts.URL, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// When
-	// Execute RoundTrip method
-	_, err = authTransport.RoundTrip(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	requests.PerformRequestWithBasicAuth(givenUsername, givenPassword, ts.URL)
 
 }

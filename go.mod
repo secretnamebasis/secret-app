@@ -6,6 +6,7 @@ go 1.17
 
 require (
 	github.com/deroproject/derohe v0.0.0-00010101000000-000000000000
+	github.com/gabstv/httpdigest v0.0.0-20230306144402-1057ac3638b3
 	github.com/go-logr/logr v1.4.1
 	github.com/google/uuid v1.5.0
 	github.com/ybbus/jsonrpc v2.1.2+incompatible
