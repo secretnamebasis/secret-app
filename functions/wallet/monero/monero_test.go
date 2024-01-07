@@ -6,7 +6,15 @@ import (
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 )
 
-func TestWalletEcho(t *testing.T) {
+func TestMoneroWallet(t *testing.T) {
+	t.Run("Test Monero Height",
+		func(t *testing.T) {
+			got := monero.Height()
+			if got == 0 {
+				t.Errorf("Error obtaining height, got %v", got)
+			}
+		},
+	)
 	t.Run(
 		"Test Wallet Integrated Address",
 		func(t *testing.T) {
