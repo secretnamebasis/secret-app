@@ -14,41 +14,47 @@ var (
 	moneroPass = "bargraph-chivalry-bullhorn"
 	ip         = "192.168.12.176"
 	port       = "28088"
+
+	in = true
 )
 
-type Transfer struct {
-	Address         string   `json:"address"`
-	Amount          uint64   `json:"amount"`
-	Amounts         []uint64 `json:"amounts"`
-	Confirmations   uint64   `json:"confirmations"`
-	DoubleSpendSeen bool     `json:"double_spend_seen"`
-	Fee             uint64   `json:"fee"`
-	Height          uint64   `json:"height"`
-	Locked          bool     `json:"locked"`
-	Note            string   `json:"note"`
-	PaymentID       string   `json:"payment_id"`
-	SubAddrIndex    struct {
-		Major uint64 `json:"major"`
-		Minor uint64 `json:"minor"`
-	} `json:"subaddr_index"`
-	SubAddrIndices []struct {
-		Major uint64 `json:"major"`
-		Minor uint64 `json:"minor"`
-	} `json:"subaddr_indices"`
-	SuggestedConfirmationsThreshold uint64 `json:"suggested_confirmations_threshold"`
-	Timestamp                       uint64 `json:"timestamp"`
-	TxID                            string `json:"txid"`
-	Type                            string `json:"type"`
-	UnlockTime                      uint64 `json:"unlock_time"`
-}
+type (
+	TransferResult struct {
+		In      []Entry `json:"in,omitempty"`
+		Out     []Entry `json:"out,omitempty"`
+		Pending []Entry `json:"pending,omitempty"`
+		Failed  []Entry `json:"failed,omitempty"`
+		Pool    []Entry `json:"pool,omitempty"`
+	}
 
-type transferResult struct {
-	Incoming []Transfer `json:"in"`
-	Outgoing []Transfer `json:"out"`
-	Pending  []Transfer `json:"pending"`
-	Failed   []Transfer `json:"failed"`
-	Pool     []Transfer `json:"pool"`
-}
+	SubaddrIndex struct {
+		Major uint64 `json:"major"`
+		Minor uint64 `json:"minor"`
+	}
+	Entry struct {
+		Address                         string         `json:"address"`
+		Amount                          uint64         `json:"amount"`
+		Amounts                         []uint64       `json:"amounts"`
+		Confirmations                   uint64         `json:"confirmations"`
+		DoubleSpendSeen                 bool           `json:"double_spend_seen"`
+		Fee                             uint64         `json:"fee"`
+		Height                          uint64         `json:"height"`
+		Locked                          bool           `json:"locked"`
+		Note                            string         `json:"note"`
+		PaymentID                       string         `json:"payment_id"`
+		SubaddrIndex                    SubaddrIndex   `json:"subaddr_index"`
+		SubaddrIndices                  []SubaddrIndex `json:"subaddr_indices"`
+		SuggestedConfirmationsThreshold uint64         `json:"suggested_confirmations_threshold"`
+		Timestamp                       uint64         `json:"timestamp"`
+		TxID                            string         `json:"txid"`
+		Type                            string         `json:"type"`
+		UnlockTime                      uint64         `json:"unlock_time"`
+	}
+
+	Get_Transfers_Result struct {
+		Entries TransferResult
+	}
+)
 
 // IntegratedAddressResponse represents the structure of the JSON response for an integrated address
 type IntegratedAddressResponse struct {
@@ -71,12 +77,6 @@ type HeightResponse struct {
 		Height uint64 `json:"height"`
 	} `json:"result"`
 }
-
-var (
-	in = true
-
-	accountIndex uint64
-)
 
 func Height() int {
 	data := map[string]interface{}{
@@ -170,16 +170,52 @@ func createHTTPRequest(method, endpoint string, body []byte) (*http.Request, err
 	return request, nil
 }
 
-func GetIncomingTransfers() (*transferResult, error) {
+func GetIncomingTransfers() (TransferResult, error) {
 	data := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      "0",
 		"method":  "get_transfers",
 		"params": map[string]interface{}{
 			"in": in,
-
-			"account_index": accountIndex,
 		},
+	}
+	jsonData, _ := json.Marshal(data)
+
+	request, err := createHTTPRequest("POST", "json_rpc", jsonData)
+	if err != nil {
+		return TransferResult{}, err
+	}
+	defer request.Body.Close()
+
+	response, err := makeRequest(request)
+	if err != nil {
+		return TransferResult{}, err
+	}
+	defer response.Body.Close()
+
+	var transferResponse struct {
+		Result TransferResult `json:"result,omitempty"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&transferResponse); err != nil {
+		return TransferResult{}, err
+	}
+
+	return transferResponse.Result, nil
+}
+
+func GetIncomingTransfersByHeight(n int) (*Get_Transfers_Result, error) {
+	var transfers Get_Transfers_Result
+	params := map[string]interface{}{
+		"in":               true,
+		"filter_by_height": true,
+		"min_height":       uint64(n - 1),
+		"max_height":       uint64(n),
+	}
+	data := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "0",
+		"method":  "get_transfers",
+		"params":  params,
 	}
 	jsonData, _ := json.Marshal(data)
 
@@ -191,22 +227,22 @@ func GetIncomingTransfers() (*transferResult, error) {
 
 	response, err := makeRequest(request)
 	if err != nil {
-		return nil, err
+		return nil, err // Return the emptyTransferResult
 	}
+
 	defer response.Body.Close()
 
-	var transferResponse transferResult
-	if err := json.NewDecoder(response.Body).Decode(&transferResponse); err != nil {
-		return nil, err
+	if err := json.NewDecoder(response.Body).Decode(&transfers); err != nil {
+		return nil, err // Return the emptyTransferResult
 	}
 
-	return &transferResponse, nil
+	return &transfers, nil
 }
 
 // Address retrieves the wallet's addresses for a specific account index.
 func Address(accountIndex uint64) string {
 	params := map[string]interface{}{
-		"account_index": accountIndex,
+
 		// Optionally, add logic to specify specific address indices if needed.
 		// "address_index": []uint64{0, 1, 4},
 	}

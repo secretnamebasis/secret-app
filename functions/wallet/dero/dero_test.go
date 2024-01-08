@@ -92,10 +92,10 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletGetTransfersByHeight",
 		func(t *testing.T) {
-			given := dero.Height()
-			_, got := dero.GetIncomingTransfersByHeight(given)
-			if got != nil {
-				t.Errorf(got.Error())
+			given := 3128402
+			got, err := dero.GetIncomingTransfersByHeight(given)
+			if err != nil {
+				t.Errorf("got %+v", got)
 			}
 		},
 	)

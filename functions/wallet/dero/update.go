@@ -7,5 +7,5 @@ import (
 )
 
 func updateRequest(e rpc.Entry, message string, db *bbolt.DB) {
-	exports.Logs.Info("Handling update request", "txid", e.TXID)
+	exports.Logs.Info(Echo("DERO Handling update request"), "txid", e.TXID)
 }

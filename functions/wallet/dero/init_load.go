@@ -10,7 +10,6 @@ func Load(db *bbolt.DB) error {
 	if loaded {
 		return nil
 	}
-	exports.Logs.Info(Echo("Initial Loading of Wallet Entries"))
 
 	transfers, err := GetIncomingTransfers()
 	if err != nil {

@@ -5,5 +5,5 @@ import (
 )
 
 func AlreadyProcessedTransfer(err error, e rpc.Entry) {
-	TransferError(err, e, "already processed transfer")
+	TransferError(err, e, "DERO already processed transfer")
 }

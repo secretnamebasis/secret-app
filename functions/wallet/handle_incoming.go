@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/deroproject/derohe/rpc"
@@ -16,18 +15,35 @@ var currentMoneroHeight int
 
 func IncomingTransfers(db *bbolt.DB) error {
 	LoopActivated := false
-	exports.Logs.Info(dero.Echo("Entering For Loop"))
 
 	if err := dero.Load(db); err != nil {
 		return err // Exit on error during initial load
 	}
+	if err := monero.Load(db); err != nil {
+		return err // Exit on error during initial load
+	}
+	Info("Entries Loaded")
 
 	return processIncomingTransfers(db, &LoopActivated)
 }
 
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
+	processMoneroTransfers := func(transfers *monero.Get_Transfers_Result) error {
 
-	checkAndProcess := func(transfers *rpc.Get_Transfers_Result) error {
+		if !*LoopActivated {
+
+			*LoopActivated = true
+		}
+
+		for _, e := range transfers.Entries.In {
+			if err := monero.IncomingTransferEntry(e, db); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+	processDeroTransfers := func(transfers *rpc.Get_Transfers_Result) error {
 
 		if !*LoopActivated {
 
@@ -42,10 +58,9 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 		return nil
 	}
-
+	Info("Entering For Loop")
 	for {
 		deroHeight := dero.Height()
-
 		moneroHeight := monero.Height()
 
 		if currentDeroHeight != deroHeight {
@@ -53,14 +68,30 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 			if currentMoneroHeight != moneroHeight {
 				currentMoneroHeight = moneroHeight
-				dero.HeightInfo("Monero Height:" + strconv.Itoa(monero.Height()))
 
+				moneroTransfers, err := monero.GetIncomingTransfersByHeight(monero.Height())
+
+				// Check if moneroTransfers is empty or has no entries
+				if moneroTransfers.Entries.In == nil {
+					// Handle the case where there are no transfers
+
+					exports.Logs.Info(dero.Echo("XMR"), "Height:", moneroHeight)
+					continue
+				}
+
+				if err != nil {
+					return err
+				}
+				if err := processMoneroTransfers(moneroTransfers); err != nil {
+					return err
+				}
 			}
 
-			dero.HeightInfo("Dero Height:" + strconv.Itoa(dero.Height()))
-			transfers, err := dero.GetIncomingTransfersByHeight(dero.Height())
+			deroTransfers, err := dero.GetIncomingTransfersByHeight(dero.Height())
 
-			if transfers == nil {
+			if deroTransfers == nil {
+				exports.Logs.Info(dero.Echo("DERO"), "Height:", deroHeight)
+
 				continue
 			}
 
@@ -68,7 +99,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 				return err
 			}
 
-			if err := checkAndProcess(transfers); err != nil {
+			if err := processDeroTransfers(deroTransfers); err != nil {
 				return err
 			}
 		}
@@ -79,4 +110,9 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 		}
 		time.Sleep(sleepDuration)
 	}
+}
+
+func Info(message string) {
+	msg := dero.Echo(message)
+	exports.Logs.Info(msg)
 }

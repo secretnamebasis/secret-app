@@ -7,5 +7,5 @@ import (
 )
 
 func reviewRequest(e rpc.Entry, message string, db *bbolt.DB) {
-	exports.Logs.Info("Handling review request", "txid", e.TXID)
+	exports.Logs.Info(Echo("DERO Handling review request"), "txid", e.TXID)
 }

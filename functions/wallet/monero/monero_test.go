@@ -6,6 +6,28 @@ import (
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 )
 
+var entry = []monero.Entry{
+	{
+		Address:                         "42oK8BJRrY5DYXbWxMS5j3Zamjkmsk6vDRS8tRR5TUFJTggTKovWzkien1Vp8bXvKAP1hDFJwZjxUgRqjfmY9sNPFvSea4w",
+		Amount:                          1000000000,
+		Amounts:                         []uint64{1000000000},
+		Confirmations:                   103963,
+		DoubleSpendSeen:                 false,
+		Fee:                             44440000,
+		Height:                          2953189,
+		Locked:                          false,
+		Note:                            "",
+		PaymentID:                       "1e70dcce10f38392",
+		SubaddrIndex:                    monero.SubaddrIndex{Major: 0, Minor: 0},
+		SubaddrIndices:                  []monero.SubaddrIndex{{Major: 0, Minor: 0}},
+		SuggestedConfirmationsThreshold: 1,
+		Timestamp:                       1692187838,
+		TxID:                            "7c1238251d6cd215726f9ad716b6a0dc2b24b17d3b621ad875d252a62542cdcf",
+		Type:                            "in",
+		UnlockTime:                      0,
+	},
+}
+
 func TestMoneroWallet(t *testing.T) {
 	t.Run("Test Monero Height",
 		func(t *testing.T) {
@@ -28,6 +50,15 @@ func TestMoneroWallet(t *testing.T) {
 		got := monero.Address(given)
 		if got == "" {
 			t.Errorf("err.Error()")
+		}
+	},
+	)
+
+	t.Run("Test Monero Transfers by Height", func(t *testing.T) {
+		given := 2953189
+		_, err := monero.GetIncomingTransfersByHeight(given)
+		if err != nil {
+			t.Errorf("%s", err)
 		}
 	})
 
