@@ -1,4 +1,4 @@
-package update
+package dero
 
 import (
 	"github.com/deroproject/derohe/rpc"
@@ -6,6 +6,6 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func Request(e rpc.Entry, message string, db *bbolt.DB) {
+func updateRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	exports.Logs.Info("Handling update request", "txid", e.TXID)
 }

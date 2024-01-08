@@ -7,8 +7,8 @@ import (
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/crypto"
 	"github.com/secretnamebasis/secret-app/functions/database"
-	"github.com/secretnamebasis/secret-app/functions/handlers"
-	logger "github.com/secretnamebasis/secret-app/functions/logger"
+	"github.com/secretnamebasis/secret-app/functions/logger"
+	"github.com/secretnamebasis/secret-app/functions/wallet"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 )
@@ -95,8 +95,8 @@ func RunApp() error {
 		),
 	)
 
-	handlers.
-		IncomingTransfers(db)
+	wallet.
+		ProcessIncomingTransfers(db, LoopActivated)
 
 	return nil // Stop the loop and return nil
 }

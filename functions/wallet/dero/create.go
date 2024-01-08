@@ -8,7 +8,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func Request(e rpc.Entry, message string, db *bbolt.DB) {
+func createRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	RequestInfo(e, message+" request")
 
 	reply := createTransfer(e)

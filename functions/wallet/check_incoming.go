@@ -6,7 +6,6 @@ import (
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/logger"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 	"go.etcd.io/bbolt"
@@ -15,7 +14,18 @@ import (
 var currentDeroHeight int
 var currentMoneroHeight int
 
-func IncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
+func IncomingTransfers(db *bbolt.DB) error {
+	LoopActivated := false
+	exports.Logs.Info(dero.Echo("Entering For Loop"))
+
+	if err := dero.Load(db); err != nil {
+		return err // Exit on error during initial load
+	}
+
+	return ProcessIncomingTransfers(db, &LoopActivated)
+}
+
+func ProcessIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 	checkAndProcess := func(transfers *rpc.Get_Transfers_Result) error {
 
@@ -43,11 +53,11 @@ func IncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 			if currentMoneroHeight != moneroHeight {
 				currentMoneroHeight = moneroHeight
-				logger.HeightInfo("Monero Height:" + strconv.Itoa(monero.Height()))
+				dero.HeightInfo("Monero Height:" + strconv.Itoa(monero.Height()))
 
 			}
 
-			logger.HeightInfo("Dero Height:" + strconv.Itoa(dero.Height()))
+			dero.HeightInfo("Dero Height:" + strconv.Itoa(dero.Height()))
 			transfers, err := dero.GetIncomingTransfersByHeight(dero.Height())
 
 			if transfers == nil {

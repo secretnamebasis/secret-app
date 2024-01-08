@@ -99,7 +99,7 @@ func TestHandleIncomingTransfers(t *testing.T) {
 				t,
 				func(db *bbolt.DB) error {
 
-					got := dero.IncomingTransfers(db)
+					got := ProcessIncomingTransfers(db)
 					if got == nil {
 						t.Errorf("got %s", got)
 					}

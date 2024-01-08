@@ -10,17 +10,6 @@ import (
 
 var loaded bool
 
-func IncomingTransfers(db *bbolt.DB) error {
-	LoopActivated := false
-	exports.Logs.Info(Echo("Entering For Loop"))
-
-	if err := Load(db); err != nil {
-		return err // Exit on error during initial load
-	}
-
-	return IncomingTransfers(db, &LoopActivated)
-}
-
 func IncomingTransferEntry(e rpc.Entry, db *bbolt.DB) error {
 	// Simulating a condition that might lead to an error
 	var err = errors.New("error")
