@@ -23,6 +23,13 @@ func TestMoneroWallet(t *testing.T) {
 			}
 		},
 	)
+	t.Run("Test Monero Address", func(t *testing.T) {
+		given := uint64(0)
+		got := monero.Address(given)
+		if got == "" {
+			t.Errorf("err.Error()")
+		}
+	})
 
 	t.Run("Test Wallet Integrated Address",
 		func(t *testing.T) {

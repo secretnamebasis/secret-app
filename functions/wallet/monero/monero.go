@@ -202,3 +202,37 @@ func GetIncomingTransfers() (*transferResult, error) {
 
 	return &transferResponse, nil
 }
+
+// Address retrieves the wallet's addresses for a specific account index.
+func Address(accountIndex uint64) string {
+	params := map[string]interface{}{
+		"account_index": accountIndex,
+		// Optionally, add logic to specify specific address indices if needed.
+		// "address_index": []uint64{0, 1, 4},
+	}
+
+	data := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "0",
+		"method":  "get_address",
+		"params":  params,
+	}
+	jsonData, _ := json.Marshal(data)
+
+	request, _ := createHTTPRequest("POST", "json_rpc", jsonData)
+
+	defer request.Body.Close()
+
+	response, _ := makeRequest(request)
+
+	defer response.Body.Close()
+
+	var addressResponse map[string]interface{}
+	if err := json.NewDecoder(response.Body).Decode(&addressResponse); err != nil {
+		return err.Error()
+	}
+
+	// Extract the primary address from the response
+	address := addressResponse["result"].(map[string]interface{})["address"].(string)
+	return address
+}
