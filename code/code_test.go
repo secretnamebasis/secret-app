@@ -7,7 +7,7 @@ import (
 
 	"github.com/secretnamebasis/secret-app/code"
 	"github.com/secretnamebasis/secret-app/functions/crypto"
-	logger "github.com/secretnamebasis/secret-app/functions/logger"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 
 	"github.com/secretnamebasis/secret-app/exports"
 )
@@ -32,7 +32,7 @@ func TestRunApp(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	got := logger.Logger()
+	got := dero.Logger()
 	if got != nil {
 		t.Errorf("got %q", got)
 	}

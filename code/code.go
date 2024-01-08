@@ -7,10 +7,10 @@ import (
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/crypto"
 	"github.com/secretnamebasis/secret-app/functions/database"
-	"github.com/secretnamebasis/secret-app/functions/logger"
 	"github.com/secretnamebasis/secret-app/functions/wallet"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
+	"go.etcd.io/bbolt"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 
 func RunApp() error {
 
-	logger.Logger()
+	dero.Logger()
 
 	exports.Logs.Info(
 		dero.Echo(
@@ -45,28 +45,62 @@ func RunApp() error {
 			"Failed to establish wallet connection")
 	}
 
-	// Let's make a database
-	db_name = fmt.Sprintf(
-		"%s_%s.bbolt.db",
-		exports.APP_NAME,
-		crypto.Sha1Sum(
+	dero_DB := make_db_name(dero.Address())
+	exports.Logs.Info(
+		dero.Echo(
+			"DERO ID Created: " + dero_DB,
+		),
+	)
+
+	exports.Logs.Info(
+		dero.Echo("DERO Address: " +
 			dero.Address(),
 		),
 	)
 
 	exports.Logs.Info(
-		dero.Echo(
-			"ID Created",
+		dero.Echo("Monero Address: " +
+			monero.Address(0),
 		),
 	)
 
-	db, err := database.CreateDB(db_name) // database management might become a serious issue
-	/*
-		I mean, I made the database because capt demonstrates it, but when I play the thought out...
-		the wallet is the freaking database, why the hell do I need to make another one?
-		I think that having the ability to interact with the wallet database would be nice...
-		but I am too smoothe brained to figure that out right now.
-	*/
+	exports.Logs.Info(
+		dero.Echo("DERO Integrated Address with Expected Arguments: " +
+			dero.CreateServiceAddress(
+				dero.Address(),
+			),
+		),
+	)
+
+	exports.Logs.Info(
+		dero.Echo("DERO Integrated Address with Expected Arguments minus Hardcoded Value: " +
+			dero.CreateServiceAddressWithoutHardcodedValue(
+				dero.Address(),
+			),
+		),
+	)
+
+	wallet.IncomingTransfers(make_db(dero_DB))
+
+	return nil // Stop the loop and return nil
+}
+
+func make_db_name(s string) string {
+
+	// Let's make a database
+	db_name = fmt.Sprintf(
+		"%s_%s.bbolt.db",
+		exports.APP_NAME,
+		crypto.Sha1Sum(
+			s,
+		),
+	)
+	return db_name
+}
+
+func make_db(s string) *bbolt.DB {
+
+	db, err := database.CreateDB(db_name)
 
 	if err != nil {
 		exports.Logs.Error(err, err.Error())
@@ -74,29 +108,6 @@ func RunApp() error {
 
 	// Let's make a bucket
 	create = []byte("create")
-	database.
-		CreateBucket(db, create)
-
-	exports.Logs.Info(
-		dero.Echo(
-			"Integrated Address with Expected Arguments: " +
-				dero.CreateServiceAddress(
-					dero.Address(),
-				),
-		),
-	)
-
-	exports.Logs.Info(
-		dero.Echo(
-			"Integrated Address with Expected Arguments minus Hardcoded Value: " +
-				dero.CreateServiceAddressWithoutHardcodedValue(
-					dero.Address(),
-				),
-		),
-	)
-
-	wallet.
-		ProcessIncomingTransfers(db, LoopActivated)
-
-	return nil // Stop the loop and return nil
+	database.CreateBucket(db, create)
+	return db
 }

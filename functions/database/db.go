@@ -31,10 +31,9 @@ func CreateDB(db_name string) (*bbolt.DB, error) {
 	}
 
 	exports.Logs.Info(
-		dero.
-			Echo(
-				"Database Created",
-			),
+		dero.Echo(
+			"Database Created",
+		),
 	)
 
 	return db, nil

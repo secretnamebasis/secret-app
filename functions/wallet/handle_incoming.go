@@ -22,10 +22,10 @@ func IncomingTransfers(db *bbolt.DB) error {
 		return err // Exit on error during initial load
 	}
 
-	return ProcessIncomingTransfers(db, &LoopActivated)
+	return processIncomingTransfers(db, &LoopActivated)
 }
 
-func ProcessIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
+func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 	checkAndProcess := func(transfers *rpc.Get_Transfers_Result) error {
 

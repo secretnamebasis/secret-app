@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -20,7 +21,27 @@ func TestDB(t *testing.T) {
 	}
 
 	given := fmt.Sprintf("test_%s_%s.bbolt.db", exports.APP_NAME, crypto.Sha1Sum(exports.DEVELOPER_ADDRESS))
+	t.Run("TestOpenDB",
+		func(t *testing.T) {
+			asserts_tests.DBCreation(t, func(db *bbolt.DB) error {
+				db_name := crypto.Sha1Sum(dero.Address())
+				db, err := bbolt.Open(db_name, 0600, nil)
+				if err != nil {
+					fmt.Printf(err.Error())
+					return err
+				}
+				log.Printf("Database '%s' created successfully", db_name)
+				exports.Logs.Info(
+					dero.Echo(
+						"Database Created",
+					),
+				)
 
+				return nil
+
+			})
+		},
+	)
 	t.Run(
 		"TestCreateDB",
 		func(t *testing.T) {
