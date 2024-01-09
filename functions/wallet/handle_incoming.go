@@ -27,26 +27,27 @@ func IncomingTransfers(db *bbolt.DB) error {
 	return processIncomingTransfers(db, &LoopActivated)
 }
 
+var currentDeroTransfers *rpc.Get_Transfers_Result
+var currentMoneroTransfers monero.TransferResult
+
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
-	processMoneroTransfers := func(transfers *monero.Get_Transfers_Result) error {
 
+	processMoneroTransfers := func(transfers monero.TransferResult) error {
 		if !*LoopActivated {
-
 			*LoopActivated = true
 		}
 
-		for _, e := range transfers.Entries.In {
+		for _, e := range transfers.In {
 			if err := monero.IncomingTransferEntry(e, db); err != nil {
-				return err
+				return err // Exit on error during initial load
 			}
 		}
 
 		return nil
 	}
+
 	processDeroTransfers := func(transfers *rpc.Get_Transfers_Result) error {
-
 		if !*LoopActivated {
-
 			*LoopActivated = true
 		}
 
@@ -58,56 +59,48 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
 		return nil
 	}
+
 	Info("Entering For Loop")
 	for {
-		// get heights
-		deroHeight := dero.Height()
-		moneroHeight := monero.Height()
-		switch {
-		case currentDeroHeight != deroHeight:
-			currentDeroHeight = deroHeight
-			exports.Logs.Info(dero.Echo("DERO"), "Height:", deroHeight)
-
-			deroTransfers, err := dero.GetIncomingTransfersByHeight(dero.Height())
-
-			if deroTransfers == nil {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			// when we have transfers, process them seperate from the loop
-			go func() error {
-				if err := processDeroTransfers(deroTransfers); err != nil {
-					return err
-				}
-				return nil
-			}()
-		case currentMoneroHeight != moneroHeight:
-			currentMoneroHeight = moneroHeight
-			exports.Logs.Info(dero.Echo("XMR"), "Height:", moneroHeight)
-
-			moneroTransfers, err := monero.GetIncomingTransfersByHeight(monero.Height())
-
-			if moneroTransfers == nil {
-				return nil
-			}
-
-			if err != nil {
-				return err
-			}
-			// when we have transfers, process them seperate from the loop
-			go func() error {
-				if err := processMoneroTransfers(moneroTransfers); err != nil {
-					return err
-				}
-				return nil
-			}()
+		deroTransfers, err := dero.GetIncomingTransfers()
+		if err != nil {
+			return err
 		}
 
-		// MONERO is slower and dynamic, so it is second
+		moneroTransfers, err := monero.GetIncomingTransfers()
+		if err != nil {
+			return err
+		}
+
+		if currentDeroTransfers != nil && len(deroTransfers.Entries) > 0 {
+			if len(deroTransfers.Entries) != len(currentDeroTransfers.Entries) {
+				go func() error {
+					exports.Logs.Info(dero.Echo("DERO new entries found"), "Length:", len(deroTransfers.Entries))
+					deroTransfers, _ := dero.GetIncomingTransfersByHeight(dero.Height())
+					if err := processDeroTransfers(deroTransfers); err != nil {
+						return err
+					}
+					return nil
+				}()
+			}
+		}
+
+		currentDeroTransfers = &deroTransfers
+
+		if currentMoneroTransfers.In != nil && len(moneroTransfers.In) > 0 {
+			if len(moneroTransfers.In) != len(currentMoneroTransfers.In) {
+				go func() error {
+					exports.Logs.Info(dero.Echo("Monero new entries found"), "Length:", len(moneroTransfers.In), "Height:", monero.Height())
+					moneroTransfers, _ = monero.GetIncomingTransfers()
+					if err := processMoneroTransfers(moneroTransfers); err != nil {
+						return err
+					}
+					return nil
+				}()
+			}
+		}
+
+		currentMoneroTransfers = moneroTransfers
 
 		sleepDuration := 1 * time.Second
 		if exports.Testing {

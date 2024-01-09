@@ -56,9 +56,10 @@ func TestMoneroWallet(t *testing.T) {
 
 	t.Run("Test Monero Transfers by Height", func(t *testing.T) {
 		given := 2953189
-		_, err := monero.GetIncomingTransfersByHeight(given)
-		if err != nil {
-			t.Errorf("%s", err)
+		got, _ := monero.GetIncomingTransfersByHeight(given)
+
+		if got.In == nil {
+			t.Errorf("%v", got.In)
 		}
 	})
 

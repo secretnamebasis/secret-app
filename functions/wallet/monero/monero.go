@@ -199,41 +199,58 @@ func GetIncomingTransfers() (TransferResult, error) {
 
 	return transferResponse.Result, nil
 }
+func GetIncomingTransfersByHeight(n int) (TransferResult, error) {
+	/*
+		NOTE: this doesn't work as intended
+		For what ever reason, and ignorance
+		is a valid reason for reason...
+		When the server is called, it
+		returns the appropriate height object
+		from result:{"in":[]} (see tests);
+		however, despite my best efforts,
+		the transfers at Height(),
+		will return nil always.
 
-func GetIncomingTransfersByHeight(n int) (*Get_Transfers_Result, error) {
-	var transfers Get_Transfers_Result
-	params := map[string]interface{}{
-		"in":               true,
-		"filter_by_height": true,
-		"min_height":       uint64(n - 1),
-		"max_height":       uint64(n),
-	}
+		So our solution was to dump all
+		transfers through the handler and
+		reference already_processed for
+		all objects in the wallet that
+		have... already been processed.
+	*/
 	data := map[string]interface{}{
 		"jsonrpc": "2.0",
 		"id":      "0",
 		"method":  "get_transfers",
-		"params":  params,
+		"params": map[string]interface{}{
+			"in": true,
+
+			"filter_by_height": true,
+			"min_height":       uint64(n - 1),
+			"max_height":       uint64(n),
+		},
 	}
 	jsonData, _ := json.Marshal(data)
 
 	request, err := createHTTPRequest("POST", "json_rpc", jsonData)
 	if err != nil {
-		return nil, err
+		return TransferResult{}, err
 	}
 	defer request.Body.Close()
 
 	response, err := makeRequest(request)
 	if err != nil {
-		return nil, err // Return the emptyTransferResult
+		return TransferResult{}, err
 	}
-
 	defer response.Body.Close()
 
-	if err := json.NewDecoder(response.Body).Decode(&transfers); err != nil {
-		return nil, err // Return the emptyTransferResult
+	var transferResponse struct {
+		Result TransferResult `json:"result,omitempty"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&transferResponse); err != nil {
+		return TransferResult{}, err
 	}
 
-	return &transfers, nil
+	return transferResponse.Result, nil
 }
 
 // Address retrieves the wallet's addresses for a specific account index.
