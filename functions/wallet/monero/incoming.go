@@ -29,7 +29,7 @@ func IncomingTransferEntry(e Entry, db *bbolt.DB) error {
 		return err
 	}
 
-	exports.Logs.Info(local.SayEcho("WALLET Monero: "), "txid", e.TxID, "amount", e.Amount, "payID", e.PaymentID)
+	exports.Logs.Info(local.SayEcho("WALLET Monero: "), "txid", e.TxID, "amount", e.Amount, "payment_id", e.PaymentID)
 
 	return nil
 }

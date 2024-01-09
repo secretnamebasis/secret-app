@@ -8,6 +8,8 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+var response monero.IntegratedAddressResponse
+
 func createRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	RequestInfo(e, message+" request")
 
@@ -16,15 +18,17 @@ func createRequest(e rpc.Entry, message string, db *bbolt.DB) {
 
 	if result != "" {
 		updateDatabaseOnSuccess(db, message, e.TXID)
-		exports.Logs.Info(Echo("ping replied successfully with pong "), "result", result)
+		exports.Logs.Info(Echo("ping replied successfully with pong "), "result", result, "payment_id", response.PaymentID)
 		// Log the successful completion
 	}
 }
 
 func createTransfer(e rpc.Entry) rpc.Transfer_Params {
 	where := getAddressFromEntry(e)
-	integratedAddress := getIntegratedAddress()
-	comment := getCommentFromEntry(integratedAddress)
+	request, _ := monero.MakeIntegratedAddress()
+	response.IntegratedAddress = request["integrated_address"]
+	response.PaymentID = request["payment_id"]
+	comment := getCommentFromEntry(response.IntegratedAddress)
 
 	return rpc.Transfer_Params{
 		Transfers: []rpc.Transfer{
@@ -39,13 +43,6 @@ func createTransfer(e rpc.Entry) rpc.Transfer_Params {
 
 func getAddressFromEntry(e rpc.Entry) string {
 	return e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress).(rpc.Address).String()
-}
-
-func getIntegratedAddress() string {
-	request, _ := monero.MakeIntegratedAddress()
-	var response monero.IntegratedAddressResponse
-	response.IntegratedAddress = request["integrated_address"]
-	return response.IntegratedAddress
 }
 
 func getCommentFromEntry(integratedAddress string) rpc.Arguments {

@@ -54,29 +54,26 @@ type (
 	Get_Transfers_Result struct {
 		Entries TransferResult
 	}
+	IntegratedAddressResponse struct {
+		ID      string `json:"id"`
+		JSONRPC string `json:"jsonrpc"`
+		Result  struct {
+			IntegratedAddress string `json:"integrated_address"`
+			PaymentID         string `json:"payment_id"`
+		} `json:"result"`
+
+		// Add the fields IntegratedAddress and PaymentID directly in the struct
+		IntegratedAddress string
+		PaymentID         string
+	}
+	HeightResponse struct {
+		ID      string `json:"id"`
+		JSONRPC string `json:"jsonrpc"`
+		Result  struct {
+			Height uint64 `json:"height"`
+		} `json:"result"`
+	}
 )
-
-// IntegratedAddressResponse represents the structure of the JSON response for an integrated address
-type IntegratedAddressResponse struct {
-	ID      string `json:"id"`
-	JSONRPC string `json:"jsonrpc"`
-	Result  struct {
-		IntegratedAddress string `json:"integrated_address"`
-		PaymentID         string `json:"payment_id"`
-	} `json:"result"`
-
-	// Add the fields IntegratedAddress and PaymentID directly in the struct
-	IntegratedAddress string
-	PaymentID         string
-}
-
-type HeightResponse struct {
-	ID      string `json:"id"`
-	JSONRPC string `json:"jsonrpc"`
-	Result  struct {
-		Height uint64 `json:"height"`
-	} `json:"result"`
-}
 
 func Height() int {
 	data := map[string]interface{}{

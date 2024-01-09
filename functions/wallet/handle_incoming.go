@@ -60,38 +60,17 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 	}
 	Info("Entering For Loop")
 	for {
+		// get heights
 		deroHeight := dero.Height()
 		moneroHeight := monero.Height()
-
-		if currentDeroHeight != deroHeight {
+		switch {
+		case currentDeroHeight != deroHeight:
 			currentDeroHeight = deroHeight
-
-			if currentMoneroHeight != moneroHeight {
-				currentMoneroHeight = moneroHeight
-
-				moneroTransfers, err := monero.GetIncomingTransfersByHeight(monero.Height())
-
-				// Check if moneroTransfers is empty or has no entries
-				if moneroTransfers.Entries.In == nil {
-					// Handle the case where there are no transfers
-
-					exports.Logs.Info(dero.Echo("XMR"), "Height:", moneroHeight)
-					continue
-				}
-
-				if err != nil {
-					return err
-				}
-				if err := processMoneroTransfers(moneroTransfers); err != nil {
-					return err
-				}
-			}
+			exports.Logs.Info(dero.Echo("DERO"), "Height:", deroHeight)
 
 			deroTransfers, err := dero.GetIncomingTransfersByHeight(dero.Height())
 
 			if deroTransfers == nil {
-				exports.Logs.Info(dero.Echo("DERO"), "Height:", deroHeight)
-
 				continue
 			}
 
@@ -99,10 +78,36 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 				return err
 			}
 
-			if err := processDeroTransfers(deroTransfers); err != nil {
+			// when we have transfers, process them seperate from the loop
+			go func() error {
+				if err := processDeroTransfers(deroTransfers); err != nil {
+					return err
+				}
+				return nil
+			}()
+		case currentMoneroHeight != moneroHeight:
+			currentMoneroHeight = moneroHeight
+			exports.Logs.Info(dero.Echo("XMR"), "Height:", moneroHeight)
+
+			moneroTransfers, err := monero.GetIncomingTransfersByHeight(monero.Height())
+
+			if moneroTransfers == nil {
+				return nil
+			}
+
+			if err != nil {
 				return err
 			}
+			// when we have transfers, process them seperate from the loop
+			go func() error {
+				if err := processMoneroTransfers(moneroTransfers); err != nil {
+					return err
+				}
+				return nil
+			}()
 		}
+
+		// MONERO is slower and dynamic, so it is second
 
 		sleepDuration := 1 * time.Second
 		if exports.Testing {
