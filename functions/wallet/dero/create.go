@@ -20,7 +20,7 @@ func createRequest(e rpc.Entry, message string, db *bbolt.DB) {
 		updateDatabaseOnSuccess(db, message, e)
 		exports.Logs.Info(Echo("ping replied successfully with pong "), "result", result, "payment_id", response.PaymentID)
 		message = "contacts"
-		updateContactsOnSuccess(db, message, e)
+		updateContactsOnSuccess(db, message, e, response)
 		exports.Logs.Info(Echo("reply back address paired with paymentID "), "address", getAddressFromEntry(e), "payment_id", response.PaymentID)
 		// Log the successful completion
 	}
@@ -83,10 +83,11 @@ func updateDatabaseOnSuccess(db *bbolt.DB, message string, e rpc.Entry) {
 
 	}
 }
-func updateContactsOnSuccess(db *bbolt.DB, message string, e rpc.Entry) {
+func updateContactsOnSuccess(db *bbolt.DB, message string, e rpc.Entry, response monero.IntegratedAddressResponse) {
+	address := e.Payload_RPC.Value(rpc.RPC_REPLYBACK_ADDRESS, rpc.DataAddress).(rpc.Address).String()
 	err := db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(message))
-		return b.Put([]byte(e.TXID), []byte(response.Result.PaymentID))
+		return b.Put([]byte(response.PaymentID), []byte(address))
 	})
 
 	if err != nil {
