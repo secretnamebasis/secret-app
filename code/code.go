@@ -109,5 +109,12 @@ func make_db(s string) *bbolt.DB {
 	// Let's make a bucket
 	create = []byte("create")
 	database.CreateBucket(db, create)
+
+	sale := []byte("sale")
+	database.CreateBucket(db, sale)
+
+	contacts := []byte("contacts")
+	database.CreateBucket(db, contacts)
+
 	return db
 }
