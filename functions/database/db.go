@@ -15,7 +15,7 @@ func CreateBucket(db *bbolt.DB, bucketName []byte) error {
 		exports.Logs.Info(
 			dero.
 				Echo(
-					"Sales Initiated",
+					string(bucketName) + " bucket initiated",
 				),
 		)
 		return err
