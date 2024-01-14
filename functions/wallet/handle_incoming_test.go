@@ -8,10 +8,32 @@ import (
 	asserts_tests "github.com/secretnamebasis/secret-app/asserts"
 	"github.com/secretnamebasis/secret-app/functions/wallet"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 	"go.etcd.io/bbolt"
 )
 
-var entry = []rpc.Entry{
+var moneroEntry = []monero.Entry{
+	{
+		Address:                         "42oK8BJRrY5DYXbWxMS5j3Zamjkmsk6vDRS8tRR5TUFJTggTKovWzkien1Vp8bXvKAP1hDFJwZjxUgRqjfmY9sNPFvSea4w",
+		Amount:                          1000000000,
+		Amounts:                         []uint64{1000000000},
+		Confirmations:                   103963,
+		DoubleSpendSeen:                 false,
+		Fee:                             44440000,
+		Height:                          2953189,
+		Locked:                          false,
+		Note:                            "",
+		PaymentID:                       "1e70dcce10f38392",
+		SubaddrIndex:                    monero.SubaddrIndex{Major: 0, Minor: 0},
+		SubaddrIndices:                  []monero.SubaddrIndex{{Major: 0, Minor: 0}},
+		SuggestedConfirmationsThreshold: 1,
+		Timestamp:                       1692187838,
+		TxID:                            "7c1238251d6cd215726f9ad716b6a0dc2b24b17d3b621ad875d252a62542cdcf",
+		Type:                            "in",
+		UnlockTime:                      0,
+	},
+}
+var deroEntry = []rpc.Entry{
 	{
 		Height:         3114209,
 		TopoHeight:     3114209,
@@ -105,17 +127,38 @@ func TestHandleIncomingTransfers(t *testing.T) {
 		},
 	)
 	t.Run(
-		"Test Handle Incoming Transfer Entry",
+		"Test Handle Incoming DERO Transfer Entry",
 		func(t *testing.T) {
 
 			asserts_tests.DBCreationWithBucket(
 				t,
 				func(db *bbolt.DB) error {
 
-					given := entry[1]
+					given := deroEntry[1]
 					given.Amount = 0
 
 					if got := dero.IncomingTransferEntry(given, db); got != nil {
+						t.Errorf("got %s", got)
+					}
+
+					return nil
+				},
+			)
+		},
+	)
+
+	t.Run(
+		"Test Handle Incoming Monero Transfer Entry",
+		func(t *testing.T) {
+
+			asserts_tests.DBCreationWithBucket(
+				t,
+				func(db *bbolt.DB) error {
+
+					given := moneroEntry[1]
+					given.Amount = 0
+
+					if got := monero.IncomingTransferEntry(given, db); got != nil {
 						t.Errorf("got %s", got)
 					}
 

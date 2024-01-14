@@ -17,8 +17,11 @@ func createRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	result := SendTransfer(reply)
 
 	if result != "" {
-		updateDatabaseOnSuccess(db, message, e.TXID)
+		updateDatabaseOnSuccess(db, message, e)
 		exports.Logs.Info(Echo("ping replied successfully with pong "), "result", result, "payment_id", response.PaymentID)
+		message = "contacts"
+		updateContactsOnSuccess(db, message, e)
+		exports.Logs.Info(Echo("reply back address paired with paymentID "), "address", getAddressFromEntry(e), "payment_id", response.PaymentID)
 		// Log the successful completion
 	}
 }
@@ -69,11 +72,23 @@ func prepareTransferPayload(comment rpc.Arguments) rpc.Arguments {
 	return comment
 }
 
-func updateDatabaseOnSuccess(db *bbolt.DB, message string, txID string) {
+func updateDatabaseOnSuccess(db *bbolt.DB, message string, e rpc.Entry) {
 	err := db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(message))
-		return b.Put([]byte(txID), []byte("done"))
+		return b.Put([]byte(e.TXID), []byte("done"))
 	})
+	if err != nil {
+		exports.Logs.Error(err, Echo("err updating db"))
+		// Handle the error in updating the database
+
+	}
+}
+func updateContactsOnSuccess(db *bbolt.DB, message string, e rpc.Entry) {
+	err := db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(message))
+		return b.Put([]byte(e.TXID), []byte(response.Result.PaymentID))
+	})
+
 	if err != nil {
 		exports.Logs.Error(err, Echo("err updating db"))
 		// Handle the error in updating the database
