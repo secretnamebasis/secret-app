@@ -8,7 +8,7 @@ import (
 )
 
 func ToBeProcessed(e rpc.Entry, db *bbolt.DB) {
-	ToBeProcessedInfo(e, "DERO to be processed")
+	// ToBeProcessedInfo(e, "DERO to be processed")
 
 	switch dstPort := e.Payload_RPC.Value(rpc.RPC_DESTINATION_PORT, rpc.DataUint64).(uint64); dstPort {
 	case exports.DEST_PORT:
