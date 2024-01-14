@@ -2,14 +2,14 @@ package monero
 
 import "go.etcd.io/bbolt"
 
-func isTransactionProcessed(db *bbolt.DB, bucketName string, TxID string) (bool, error) {
-	var alreadyProcessed bool
+func isTransactionProcessed(db *bbolt.DB, bucketName string, e Entry) (bool, error) {
+	var already_processed bool
 
 	err := db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucketName))
 		if bucket != nil {
-			if existing := bucket.Get([]byte(TxID)); existing != nil {
-				alreadyProcessed = true
+			if existing := bucket.Get([]byte(e.TxID)); existing != nil {
+				already_processed = true
 			}
 		}
 		return nil
@@ -19,5 +19,25 @@ func isTransactionProcessed(db *bbolt.DB, bucketName string, TxID string) (bool,
 		return false, err // Return false and the encountered error
 	}
 
-	return alreadyProcessed, nil
+	return already_processed, nil
+}
+
+func hasPaymentID(db *bbolt.DB, bucketName string, e Entry) (bool, error) {
+	var already_processed bool
+
+	err := db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte(bucketName))
+		if bucket != nil {
+			if existing := bucket.Get([]byte(e.PaymentID)); existing != nil {
+				already_processed = true
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return false, err // Return false and the encountered error
+	}
+
+	return already_processed, nil
 }
