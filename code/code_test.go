@@ -13,12 +13,18 @@ import (
 )
 
 func TestRunApp(t *testing.T) {
-	Testing := true
-	if !Testing {
+	exports.Testing = true
+	if exports.Testing == true {
 
 		given := fmt.Sprintf("%s_%s.bbolt.db", exports.APP_NAME, crypto.Sha1Sum(exports.DEVELOPER_ADDRESS))
+
 		defer func() {
 			err := os.Remove(given)
+			if err != nil {
+				t.Errorf("Error cleaning up: %s", err)
+			}
+
+			err = os.Remove("items.db")
 			if err != nil {
 				t.Errorf("Error cleaning up: %s", err)
 			}

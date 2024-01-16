@@ -12,12 +12,7 @@ func CreateBucket(db *bbolt.DB, bucketName []byte) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(bucketName)
 
-		exports.Logs.Info(
-			dero.
-				Echo(
-					string(bucketName) + " bucket initiated",
-				),
-		)
+		exports.Logs.Info(dero.Echo(string(bucketName) + " bucket initiated"))
 		return err
 	})
 }
@@ -30,11 +25,6 @@ func CreateDB(db_name string) (*bbolt.DB, error) {
 		return nil, err
 	}
 
-	exports.Logs.Info(
-		dero.Echo(
-			"Database Created",
-		),
-	)
-
+	exports.Logs.Info(dero.Echo("Database Created"))
 	return db, nil
 }
