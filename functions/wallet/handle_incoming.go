@@ -32,34 +32,6 @@ var currentMoneroTransfers monero.TransferResult
 
 func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 
-	processMoneroTransfers := func(transfers monero.TransferResult) error {
-		if !*LoopActivated {
-			*LoopActivated = true
-		}
-
-		for _, e := range transfers.In {
-			if err := monero.IncomingTransferEntry(e, db); err != nil {
-				return err // Exit on error during initial load
-			}
-		}
-
-		return nil
-	}
-
-	processDeroTransfers := func(transfers *rpc.Get_Transfers_Result) error {
-		if !*LoopActivated {
-			*LoopActivated = true
-		}
-
-		for _, e := range transfers.Entries {
-			if err := dero.IncomingTransferEntry(e, db); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
 	Info("Entering For Loop")
 	for {
 		deroTransfers, err := dero.GetIncomingTransfers()
@@ -77,7 +49,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 				go func() error {
 					exports.Logs.Info(dero.Echo("DERO new entries found"), "Length:", len(deroTransfers.Entries))
 					deroTransfers, _ := dero.GetIncomingTransfersByHeight(dero.Height())
-					if err := processDeroTransfers(deroTransfers); err != nil {
+					if err := processDeroTransfers(deroTransfers, db, LoopActivated); err != nil {
 						return err
 					}
 					return nil
@@ -92,7 +64,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 				go func() error {
 					exports.Logs.Info(dero.Echo("Monero new entries found"), "Length:", len(moneroTransfers.In), "Height:", monero.Height())
 					moneroTransfers, _ = monero.GetIncomingTransfers()
-					if err := processMoneroTransfers(moneroTransfers); err != nil {
+					if err := processMoneroTransfers(moneroTransfers, db, LoopActivated); err != nil {
 						return err
 					}
 					return nil
@@ -108,9 +80,38 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 		}
 		time.Sleep(sleepDuration)
 	}
+
 }
 
 func Info(message string) {
 	msg := dero.Echo(message)
 	exports.Logs.Info(msg)
+}
+
+func processDeroTransfers(transfers *rpc.Get_Transfers_Result, db *bbolt.DB, LoopActivated *bool) error {
+	if !*LoopActivated {
+		*LoopActivated = true
+	}
+
+	for _, e := range transfers.Entries {
+		if err := dero.IncomingTransferEntry(e, db); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func processMoneroTransfers(transfers monero.TransferResult, db *bbolt.DB, LoopActivated *bool) error {
+	if !*LoopActivated {
+		*LoopActivated = true
+	}
+
+	for _, e := range transfers.In {
+		if err := monero.IncomingTransferEntry(e, db); err != nil {
+			return err // Exit on error during initial load
+		}
+	}
+
+	return nil
 }
