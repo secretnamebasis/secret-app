@@ -10,6 +10,8 @@ import (
 	"github.com/secretnamebasis/secret-app/functions/wallet"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
+	"github.com/secretnamebasis/secret-app/site"
+	"github.com/secretnamebasis/secret-app/site/config"
 	"go.etcd.io/bbolt"
 )
 
@@ -57,9 +59,9 @@ func RunApp() error {
 	logWalletInfo(deroDBName, dero.Address())
 
 	go func() {
-		config := Config{Port: 3000}
-		app := makeWebsite(config)
-		if err := startServer(app, config.Port); err != nil {
+		config := config.Config{Port: 3000}
+		app := site.MakeWebsite(config)
+		if err := site.StartServer(app, config.Port); err != nil {
 			exports.Logs.Error(err, "Error starting server")
 		}
 	}()

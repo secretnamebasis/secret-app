@@ -1,76 +1,20 @@
-package code
+package controllers
 
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+	"github.com/secretnamebasis/secret-app/site/models"
 	"go.etcd.io/bbolt"
 )
 
-// Item represents a sample data structure for demonstration
-type Item struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-}
+var db *bbolt.DB
+var bucket = []byte("items")
 
-// Config struct to hold configuration parameters
-type Config struct {
-	Port int
-}
-
-var (
-	db     *bbolt.DB
-	bucket = []byte("items")
-)
-
-func initDB() error {
-	var err error
-	db, err = bbolt.Open("items.db", 0600, nil)
-	if err != nil {
-		return err
-	}
-
-	// Create a bucket if it doesn't exist
-	err = db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucket)
-		return err
-	})
-
-	return err
-}
-
-func setupRoutes(app *fiber.App) {
-	app.Get("/", handleHome)
-	app.Get("/api/info", handleAPIInfo)
-	app.Get("/api/items", getAllItems)
-	app.Post("/api/items", createItem)
-	app.Get("/api/items/:id", getItemByID)
-	app.Put("/api/items/:id", updateItem)
-	app.Delete("/api/items/:id", deleteItem)
-	app.Use(handleNotFound)
-}
-
-func setupMiddleware(app *fiber.App) {
-	app.Use(logRequests)
-}
-
-func logRequests(c *fiber.Ctx) error {
-	log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
-	return c.Next()
-}
-
-func handleHome(c *fiber.Ctx) error {
-	message := fmt.Sprintf("Welcome to secret-swap!\n%s", dero.CreateServiceAddress(dero.Address()))
-	return c.SendString(message)
-}
-
-func handleAPIInfo(c *fiber.Ctx) error {
+func APIInfo(c *fiber.Ctx) error {
 	response := fiber.Map{
 		"message": "Welcome to secret-swap API",
 		"data":    "This is a sample API endpoint",
@@ -79,15 +23,15 @@ func handleAPIInfo(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
-func getAllItems(c *fiber.Ctx) error {
-	var items []Item
+func AllItems(c *fiber.Ctx) error {
+	var items []models.Item
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucket)
 		if b == nil {
 			return nil
 		}
 		return b.ForEach(func(k, v []byte) error {
-			var item Item
+			var item models.Item
 			if err := json.Unmarshal(v, &item); err != nil {
 				return err
 			}
@@ -103,13 +47,13 @@ func getAllItems(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": items, "status": "success"})
 }
 
-func createItem(c *fiber.Ctx) error {
-	var newItem Item
+func CreateItem(c *fiber.Ctx) error {
+	var newItem models.Item
 	if err := c.BodyParser(&newItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request body", "status": "error"})
 	}
 
-	newItem.ID, _ = getNextID()
+	newItem.ID, _ = NextID()
 	newItem.CreatedAt = time.Now()
 
 	err := db.Update(func(tx *bbolt.Tx) error {
@@ -133,9 +77,9 @@ func createItem(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": newItem, "status": "success"})
 }
 
-func getItemByID(c *fiber.Ctx) error {
+func ItemByID(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var item Item
+	var item models.Item
 
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucket)
@@ -158,9 +102,9 @@ func getItemByID(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": item, "status": "success"})
 }
 
-func updateItem(c *fiber.Ctx) error {
+func UpdateItem(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var updatedItem Item
+	var updatedItem models.Item
 	if err := c.BodyParser(&updatedItem); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Invalid request body", "status": "error"})
 	}
@@ -176,7 +120,7 @@ func updateItem(c *fiber.Ctx) error {
 			return fmt.Errorf("Item with ID %s not found", id)
 		}
 
-		var existingItem Item
+		var existingItem models.Item
 		if err := json.Unmarshal(itemJSON, &existingItem); err != nil {
 			return err
 		}
@@ -199,7 +143,7 @@ func updateItem(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": updatedItem, "status": "success"})
 }
 
-func deleteItem(c *fiber.Ctx) error {
+func DeleteItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	err := db.Update(func(tx *bbolt.Tx) error {
@@ -223,7 +167,7 @@ func deleteItem(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Item deleted successfully", "status": "success"})
 }
 
-func getNextID() (int, error) {
+func NextID() (int, error) {
 	var id int
 	err := db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucket)
@@ -246,25 +190,4 @@ func getNextID() (int, error) {
 	}
 
 	return id, nil
-}
-
-func handleNotFound(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusNotFound).SendString("404 Not Found")
-}
-
-func makeWebsite(config Config) *fiber.App {
-	app := fiber.New()
-	setupMiddleware(app)
-
-	// Initialize the database
-	if err := initDB(); err != nil {
-		log.Fatal(err)
-	}
-
-	setupRoutes(app)
-	return app
-}
-
-func startServer(app *fiber.App, port int) error {
-	return app.Listen(fmt.Sprintf(":%d", port))
 }
