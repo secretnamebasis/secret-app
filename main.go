@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	err := code.RunApp()
+	err := code.Run()
 	if err != nil {
 		log.Fatal(err)
 	}

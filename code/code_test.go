@@ -30,7 +30,7 @@ func TestRunApp(t *testing.T) {
 			}
 		}()
 
-		if code.RunApp() != nil {
+		if code.Run() != nil {
 			t.Errorf("App is not running when trying to run app")
 		}
 	}

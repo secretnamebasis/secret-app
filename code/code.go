@@ -40,7 +40,7 @@ func checkMoneroConnection() error {
 	return nil
 }
 
-func RunApp() error {
+func Run() error {
 	setupLogger()
 
 	if err := checkWalletConnection(); err != nil {
