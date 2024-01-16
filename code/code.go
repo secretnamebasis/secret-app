@@ -13,108 +13,105 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-var (
-	db_name string
-	create  []byte
-
-	LoopActivated bool
+const (
+	createBucket   = "create"
+	saleBucket     = "sale"
+	contactsBucket = "contacts"
 )
 
-func RunApp() error {
-
+func setupLogger() {
 	dero.Logger()
+	exports.Logs.Info(dero.Echo("Logger has started"))
+}
 
-	exports.Logs.Info(
-		dero.Echo(
-			"Logger has started",
-		),
-	)
-
-	if dero.Connection() == false {
-		err := errors.New("Wallet Connection Failure")
-		exports.Logs.Error(err, "Error")
-		return fmt.Errorf(
-			"Failed to establish wallet connection",
-		)
+func checkWalletConnection() error {
+	if !dero.Connection() {
+		return errors.New("Wallet Connection Failure")
 	}
+	return nil
+}
 
+func checkMoneroConnection() error {
 	if monero.Height() <= 0 {
-		err := errors.New("Wallet Connection Failure")
-		exports.Logs.Error(err, dero.Echo("Error"))
-		return fmt.Errorf(
-			"Failed to establish wallet connection")
+		return errors.New("Monero Wallet Connection Failure")
+	}
+	return nil
+}
+
+func RunApp() error {
+	setupLogger()
+
+	if err := checkWalletConnection(); err != nil {
+		return fmt.Errorf("Failed to establish wallet connection: %v", err)
 	}
 
-	dero_DB := make_db_name(dero.Address())
-	exports.Logs.Info(
-		dero.Echo(
-			"DERO ID Created: " + dero_DB,
-		),
-	)
+	if err := checkMoneroConnection(); err != nil {
+		return fmt.Errorf("Failed to establish Monero wallet connection: %v", err)
+	}
 
-	exports.Logs.Info(
-		dero.Echo("DERO Address: " +
-			dero.Address(),
-		),
-	)
+	deroDB, deroDBName, err := createDeroDB()
+	if err != nil {
+		return fmt.Errorf("Failed to create DERO database: %v", err)
+	}
 
-	exports.Logs.Info(
-		dero.Echo("Monero Address: " +
-			monero.Address(0),
-		),
-	)
+	logWalletInfo(deroDBName, dero.Address())
 
-	exports.Logs.Info(
-		dero.Echo("DERO Integrated Address with Expected Arguments: " +
-			dero.CreateServiceAddress(
-				dero.Address(),
-			),
-		),
-	)
+	go func() {
+		config := Config{Port: 3000}
+		app := makeWebsite(config)
+		if err := startServer(app, config.Port); err != nil {
+			exports.Logs.Error(err, "Error starting server")
+		}
+	}()
 
-	exports.Logs.Info(
-		dero.Echo("DERO Integrated Address with Expected Arguments minus Hardcoded Value: " +
-			dero.CreateServiceAddressWithoutHardcodedValue(
-				dero.Address(),
-			),
-		),
-	)
+	if err := performWalletOperations(deroDB); err != nil {
+		return fmt.Errorf("Failed to perform wallet operations: %v", err)
+	}
 
-	wallet.IncomingTransfers(make_db(dero_DB))
-
-	return nil // Stop the loop and return nil
+	return nil
 }
 
-func make_db_name(s string) string {
-
-	// Let's make a database
-	db_name = fmt.Sprintf(
-		"%s_%s.bbolt.db",
-		exports.APP_NAME,
-		crypto.Sha1Sum(
-			s,
-		),
-	)
-	return db_name
+func makeDBName(s string) string {
+	return fmt.Sprintf("%s_%s.bbolt.db", exports.APP_NAME, crypto.Sha1Sum(s))
 }
 
-func make_db(s string) *bbolt.DB {
+func createDeroDB() (*bbolt.DB, string, error) {
+	deroDBName := makeDBName(dero.Address())
+	db, err := createDB(deroDBName)
+	if err != nil {
+		return nil, "", fmt.Errorf("Failed to create database: %v", err)
+	}
+	return db, deroDBName, nil
+}
 
-	db, err := database.CreateDB(db_name)
-
+func createDB(dbName string) (*bbolt.DB, error) {
+	db, err := database.CreateDB(dbName)
 	if err != nil {
 		exports.Logs.Error(err, err.Error())
+		return nil, err
 	}
+	createBuckets(db)
+	return db, nil
+}
 
-	// Let's make a bucket
-	create = []byte("create")
-	database.CreateBucket(db, create)
+func createBuckets(db *bbolt.DB) {
+	buckets := []string{createBucket, saleBucket, contactsBucket}
+	for _, bucket := range buckets {
+		database.CreateBucket(db, []byte(bucket))
+	}
+}
 
-	sale := []byte("sale")
-	database.CreateBucket(db, sale)
+func performWalletOperations(deroDB *bbolt.DB) error {
+	if exports.Testing == true {
+		return nil
+	}
+	return wallet.IncomingTransfers(deroDB)
+}
 
-	contacts := []byte("contacts")
-	database.CreateBucket(db, contacts)
-
-	return db
+func logWalletInfo(deroDBName string, deroAddress string) {
+	exports.Logs.Info(dero.Echo("DERO ID Created: " + deroDBName))
+	exports.Logs.Info(dero.Echo("DERO Address: " + deroAddress))
+	exports.Logs.Info(dero.Echo("Monero Address: " + monero.Address(0)))
+	exports.Logs.Info(dero.Echo("DERO Integrated Address with Expected Arguments: " + dero.CreateServiceAddress(deroAddress)))
+	exports.Logs.Info(dero.Echo("DERO Integrated Address without Hardcoded Value: " + dero.CreateServiceAddressWithoutHardcodedValue(deroAddress)))
 }
