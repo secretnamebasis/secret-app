@@ -17,7 +17,7 @@ var bucket = []byte("items")
 func APIInfo(c *fiber.Ctx) error {
 	response := fiber.Map{
 		"message": "Welcome to secret-swap API",
-		"data":    "This is a sample API endpoint",
+		"data":    "pong",
 		"status":  "success",
 	}
 	return c.JSON(response)
