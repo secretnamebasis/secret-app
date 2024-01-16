@@ -10,7 +10,7 @@ import (
 func SetupRoutes(app *fiber.App) {
 	app.Get("/", views.Home)
 
-	api := app.Group("/api", middleware.LogRequests)
+	api := app.Group("/api", middleware.AuthReq(), middleware.LogRequests)
 	api.Get("/info", controllers.APIInfo)
 	api.Get("/items", controllers.AllItems)
 	api.Post("/items", controllers.CreateItem)
