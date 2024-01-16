@@ -14,6 +14,10 @@ import (
 var db *bbolt.DB
 var bucket = []byte("items")
 
+func SetDB(database *bbolt.DB) {
+	db = database
+}
+
 func APIInfo(c *fiber.Ctx) error {
 	response := fiber.Map{
 		"message": "Welcome to secret-swap API",
@@ -28,7 +32,7 @@ func AllItems(c *fiber.Ctx) error {
 	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucket)
 		if b == nil {
-			return nil
+			return c.JSON(fiber.Map{"data": []models.Item{}, "status": "success"})
 		}
 		return b.ForEach(func(k, v []byte) error {
 			var item models.Item
