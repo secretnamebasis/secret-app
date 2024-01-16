@@ -6,7 +6,6 @@ import (
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 )
 
 var err error
@@ -14,7 +13,7 @@ var clone *rpc.Address
 var transfers rpc.Get_Transfers_Result
 
 func Connection() bool {
-	s := dero.Address()
+	s := Address()
 	test := Echo(s)
 	if test != "WALLET "+s+"\n" {
 		return false
