@@ -3,18 +3,12 @@ package monero
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/gabstv/httpdigest"
+	"github.com/secretnamebasis/secret-app/exports"
 )
 
 var (
-	moneroUser = "secretnamebasis"
-	moneroPass = "bargraph-chivalry-bullhorn"
-	ip         = "192.168.12.176"
-	port       = "28088"
-
 	in = true
 )
 
@@ -142,13 +136,7 @@ func MakeIntegratedAddress() (map[string]string, error) {
 
 // makeRequest sends an HTTP request and returns the response.
 func makeRequest(request *http.Request) (*http.Response, error) {
-	client := http.Client{
-		Transport: &httpdigest.Transport{
-			Username:  moneroUser,
-			Password:  moneroPass,
-			Transport: http.DefaultTransport,
-		},
-	}
+	client := exports.MoneroHttpClient
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
@@ -158,12 +146,14 @@ func makeRequest(request *http.Request) (*http.Response, error) {
 
 // createHTTPRequest creates an HTTP request with common headers and parameters.
 func createHTTPRequest(method, endpoint string, body []byte) (*http.Request, error) {
-	url := fmt.Sprintf("http://%s:%s/%s", ip, port, endpoint)
-	request, err := http.NewRequest(method, url, bytes.NewBuffer(body))
+	request, err := http.NewRequest(method, exports.MoneroEndpoint, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
+
+	// Set common headers
 	request.Header.Set("Content-Type", "application/json")
+
 	return request, nil
 }
 

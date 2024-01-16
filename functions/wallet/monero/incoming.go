@@ -53,7 +53,7 @@ func IncomingTransferEntry(e Entry, db *bbolt.DB) error {
 			return err
 		}
 		var transfers rpc.Transfer_Result
-		err = exports.RpcClient.CallFor(
+		err = exports.DeroRpcClient.CallFor(
 			&transfers,
 			"Transfer",
 			reply,

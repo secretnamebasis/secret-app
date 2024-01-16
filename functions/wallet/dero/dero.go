@@ -6,6 +6,7 @@ import (
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 )
 
 var err error
@@ -13,15 +14,16 @@ var clone *rpc.Address
 var transfers rpc.Get_Transfers_Result
 
 func Connection() bool {
-	test := Echo(exports.Username)
-	if test != "WALLET "+exports.Username+"\n" {
+	s := dero.Address()
+	test := Echo(s)
+	if test != "WALLET "+s+"\n" {
 		return false
 	}
 	return true
 }
 
 func Height() int {
-	err = exports.RpcClient.CallFor(&exports.WalletHeight, "GetHeight")
+	err = exports.DeroRpcClient.CallFor(&exports.WalletHeight, "GetHeight")
 	if err != nil || exports.WalletHeight.Height == 0 {
 		fmt.Printf("Could not obtain address from wallet err %s\n", err)
 		return 0
@@ -31,7 +33,7 @@ func Height() int {
 
 func Address() string {
 
-	err = exports.RpcClient.CallFor(&exports.Addr_result, "GetAddress")
+	err = exports.DeroRpcClient.CallFor(&exports.Addr_result, "GetAddress")
 	if err != nil || exports.Addr_result.Address == "" {
 		fmt.Printf("Could not obtain address from wallet err %s\n", err)
 		return err.Error()
@@ -47,7 +49,7 @@ func Address() string {
 
 func SendTransfer(params rpc.Transfer_Params) string {
 	var transfers rpc.Transfer_Result
-	_ = exports.RpcClient.CallFor(
+	_ = exports.DeroRpcClient.CallFor(
 		&transfers,
 		"Transfer",
 		params,
@@ -62,7 +64,7 @@ func SendTransfer(params rpc.Transfer_Params) string {
 
 func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 
-	err = exports.RpcClient.CallFor(
+	err = exports.DeroRpcClient.CallFor(
 		&transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
@@ -80,7 +82,7 @@ func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 func GetIncomingTransfersByHeight(h int) (*rpc.Get_Transfers_Result, error) {
 	var transfers rpc.Get_Transfers_Result
 
-	err = exports.RpcClient.CallFor(
+	err = exports.DeroRpcClient.CallFor(
 		&transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
@@ -120,7 +122,7 @@ func CreateServiceAddressWithoutHardcodedValue(addr string) string {
 
 func Echo(s string) string {
 	var echoResult string
-	err := exports.RpcClient.CallFor(&echoResult, "Echo", s+"\n")
+	err := exports.DeroRpcClient.CallFor(&echoResult, "Echo", s+"\n")
 	if err != nil {
 		return err.Error()
 	}

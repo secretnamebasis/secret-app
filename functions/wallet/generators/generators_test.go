@@ -32,7 +32,7 @@ func TestGenerators(t *testing.T) {
 
 			var result rpc.Transfer_Result
 
-			err := exports.RpcClient.CallFor(
+			err := exports.DeroRpcClient.CallFor(
 				&result,
 				"Transfer",
 				rpc.Transfer_Params{Transfers: got},

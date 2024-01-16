@@ -1,10 +1,14 @@
 package exports
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/deroproject/derohe/rpc"
+	"github.com/gabstv/httpdigest"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 
 	"github.com/ybbus/jsonrpc"
 )
@@ -12,47 +16,33 @@ import (
 var (
 	Testing bool // Global variable to indicate testing mode
 
-)
+	Pong         = "You have purchased a really cool link"
+	deroUsername string
+	deroPassword string
+	deroIp       string
+	deroPort     string
+	deroEndpoint string
 
-var (
-	Pong     = "You have purchased a really cool link"
-	Username = "secret"
-	Password = "pass"
-	Ip       = "192.168.12.208"
-	Port     = "10104"
-	Endpoint = "http://" + Ip + ":" + Port + "/json_rpc"
-)
+	moneroUsername string
+	moneroPassword string
+	moneroIp       string
+	moneroPort     string
+	MoneroEndpoint string
 
-var (
 	Welcome      string
 	WalletHeight *rpc.GetHeight_Result
 	Addr         *rpc.Address
 
 	Addr_result rpc.GetAddress_Result
 	// default discard all logs
+	DeroHttpClient *http.Client
 
-)
+	DeroRpcClient jsonrpc.RPCClient
 
-var (
-	HttpClient = &http.Client{
-		Transport: &TransportWithBasicAuth{
-			Username: Username,
-			Password: Password,
-			Base:     http.DefaultTransport,
-		},
-	}
-)
+	MoneroHttpClient *http.Client
 
-var (
-	RpcClient = jsonrpc.NewClientWithOpts(
-		Endpoint,
-		&jsonrpc.RPCClientOpts{
-			HTTPClient: HttpClient,
-		},
-	)
-)
+	MoneroRpcClient jsonrpc.RPCClient
 
-var (
 	// currently the interpreter seems to have a glitch if this gets initialized within the code
 	// see limitations github.com/traefik/yaegi
 	Response = rpc.Arguments{
@@ -72,9 +62,7 @@ var (
 			Value:    uuid.New().String(),
 		},
 	}
-)
 
-var (
 	Expected_arguments = rpc.Arguments{
 		{
 			Name:     rpc.RPC_DESTINATION_PORT,
@@ -101,3 +89,51 @@ var (
 
 	}
 )
+
+func init() {
+
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	deroUsername = os.Getenv("DERO_USERNAME")
+	deroPassword = os.Getenv("DERO_PASSWORD")
+	deroIp = os.Getenv("DERO_IP")
+	deroPort = os.Getenv("DERO_PORT")
+	deroEndpoint = "http://" + deroIp + ":" + deroPort + "/json_rpc"
+	moneroUsername = os.Getenv("MONERO_USERNAME")
+	moneroPassword = os.Getenv("MONERO_PASSWORD")
+	moneroIp = os.Getenv("MONERO_IP")
+	moneroPort = os.Getenv("MONERO_PORT")
+	MoneroEndpoint = "http://" + moneroIp + ":" + moneroPort + "/json_rpc"
+
+	DeroHttpClient = &http.Client{
+		Transport: &TransportWithBasicAuth{
+			Username: deroUsername,
+			Password: deroPassword,
+			Base:     http.DefaultTransport,
+		},
+	}
+	DeroRpcClient = jsonrpc.NewClientWithOpts(
+		deroEndpoint,
+		&jsonrpc.RPCClientOpts{
+			HTTPClient: DeroHttpClient,
+		},
+	)
+
+	MoneroHttpClient = &http.Client{
+		Transport: &httpdigest.Transport{
+			Username:  moneroUsername,
+			Password:  moneroPassword,
+			Transport: http.DefaultTransport,
+		},
+	}
+
+	MoneroRpcClient = jsonrpc.NewClientWithOpts(
+		MoneroEndpoint,
+		&jsonrpc.RPCClientOpts{
+			HTTPClient: MoneroHttpClient,
+		},
+	)
+}
