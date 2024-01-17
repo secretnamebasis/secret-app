@@ -195,3 +195,54 @@ func NextID() (int, error) {
 
 	return id, nil
 }
+
+func DisplayItems(c *fiber.Ctx) ([]models.Item, error) {
+	var items []models.Item
+
+	err := db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucket)
+		if b == nil {
+			return nil
+		}
+
+		return b.ForEach(func(k, v []byte) error {
+			var item models.Item
+			if err := json.Unmarshal(v, &item); err != nil {
+				return err
+			}
+			items = append(items, item)
+			return nil
+		})
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving items: %v", err)
+	}
+
+	return items, nil
+}
+
+func DisplayItemByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var item models.Item
+
+	err := db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucket)
+		if b == nil {
+			return nil
+		}
+
+		itemJSON := b.Get([]byte(id))
+		if itemJSON == nil {
+			return fmt.Errorf("Item with ID %s not found", id)
+		}
+
+		return json.Unmarshal(itemJSON, &item)
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
+	}
+
+	return c.Render("./site/public/item_detail.html", fiber.Map{"Item": item})
+}

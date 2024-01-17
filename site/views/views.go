@@ -8,17 +8,30 @@ import (
 	"text/template"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+	"github.com/secretnamebasis/secret-app/site/controllers"
+	"github.com/secretnamebasis/secret-app/site/models"
 )
 
+type HomeData struct {
+	Title   string
+	Address string
+	Items   []models.Item // Add this field
+}
+
 func Home(c *fiber.Ctx) error {
+	// Retrieve blog posts
+	items, err := controllers.DisplayItems(c)
+	if err != nil {
+		return err
+	}
+
 	// Define data for rendering the template
-	data := struct {
-		Title   string
-		Address string // Add this field
-	}{
-		Title:   "secret-swap",
-		Address: dero.CreateServiceAddress(dero.Address()),
+	data := HomeData{
+		Title:   exports.APP_NAME,
+		Address: dero.Address(),
+		Items:   items,
 	}
 
 	tmpl, err := template.ParseFiles("./site/public/index.html")

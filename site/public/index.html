@@ -3,7 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>secret-swap</title>
+    <title>{{.Title}}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1em;
+        }
+        main {
+            padding: 2em;
+        }
+        section {
+            margin-top: 1em;
+        }
+        h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1em;
+            padding: 1em;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1em;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
 
@@ -11,13 +59,23 @@
         <h1>{{.Title}}</h1>
     </header>
 
-
     <main>
-        <p>This is a DERO integrated address:</p>
-        <p>{{.Address}}</p>
+        <section>
+            <h2>items</h2>
+
+            <ul>
+                {{range .Items}}
+                    <li>
+                        <h3><a href="/items/{{.ID}}">{{.Title}}</a></h3>
+                        <p><em>Published on: {{.CreatedAt.Format "Jan 2, 2006 15:04 MST"}}</em></p>
+                    </li>
+                {{end}}
+            </ul>
+        </section>
     </main>
 
     <footer>
+        <p>Donations and Private messages: {{.Address}}</p>
         <p>&copy; 2024 | secretnamebasis </p>
     </footer>
 
