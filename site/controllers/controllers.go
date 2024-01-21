@@ -7,12 +7,19 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/secretnamebasis/secret-app/exports"
+	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
 	"github.com/secretnamebasis/secret-app/site/models"
 	"go.etcd.io/bbolt"
 )
 
 var db *bbolt.DB
 var bucket = []byte("items")
+
+type ItemData struct {
+	Title   string
+	Address string
+}
 
 func SetDB(database *bbolt.DB) {
 	db = database
@@ -243,6 +250,11 @@ func DisplayItemByID(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": err.Error(), "status": "error"})
 	}
-
-	return c.Render("./site/public/item_detail.html", fiber.Map{"Item": item})
+	// Get common data for rendering the template
+	ItemData := ItemData{
+		Title:   exports.APP_NAME,
+		Address: dero.Address(),
+	}
+	// Render the template with both common and item-specific data
+	return c.Render("./site/public/item_detail.html", fiber.Map{"ItemData": ItemData, "Item": item})
 }
