@@ -3,6 +3,8 @@ package monero
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/secretnamebasis/secret-app/exports"
@@ -66,6 +68,50 @@ type (
 		Result  struct {
 			Height uint64 `json:"height"`
 		} `json:"result"`
+	}
+
+	Transfer_Params struct {
+		Destinations   []Transfer `json:"destinations"`
+		AccountIndex   uint       `json:"account_index,omitempty"`
+		SubaddrIndices []uint     `json:"subaddr_indices,omitempty"`
+		Priority       uint       `json:"priority,omitempty"`
+		Mixin          uint       `json:"mixin,omitempty"`
+		RingSize       uint       `json:"ring_size,omitempty"`
+		UnlockTime     uint       `json:"unlock_time,omitempty"`
+		GetTxKey       bool       `json:"get_tx_key,omitempty"`
+		DoNotRelay     bool       `json:"do_not_relay,omitempty"`
+		GetTxHex       bool       `json:"get_tx_hex,omitempty"`
+		GetTxMetadata  bool       `json:"get_tx_metadata,omitempty"`
+	}
+
+	Transfer struct {
+		Amount         uint64 `json:"amount"`
+		Address        string `json:"address"`
+		AccountIndex   uint   `json:"account_index,omitempty"`
+		SubaddrIndices []uint `json:"subaddr_indices,omitempty"`
+		Priority       uint   `json:"priority,omitempty"`
+		Mixin          uint   `json:"mixin,omitempty"`
+		RingSize       uint   `json:"ring_size,omitempty"`
+		UnlockTime     uint   `json:"unlock_time,omitempty"`
+		GetTxKey       bool   `json:"get_tx_key,omitempty"`
+		DoNotRelay     bool   `json:"do_not_relay,omitempty"`
+		GetTxHex       bool   `json:"get_tx_hex,omitempty"`
+		GetTxMetadata  bool   `json:"get_tx_metadata,omitempty"`
+	}
+
+	TransferResponse struct {
+		Result Result `json:"result"`
+	}
+
+	Result struct {
+		Amount        uint64 `json:"amount"`
+		Fee           uint64 `json:"fee"`
+		MultisigTxset string `json:"multisig_txset"`
+		TxBlob        string `json:"tx_blob"`
+		TxHash        string `json:"tx_hash"`
+		TxKey         string `json:"tx_key"`
+		TxMetadata    string `json:"tx_metadata"`
+		UnsignedTxset string `json:"unsigned_txset"`
 	}
 )
 
@@ -134,29 +180,6 @@ func MakeIntegratedAddress() (map[string]string, error) {
 	return result, nil
 }
 
-// makeRequest sends an HTTP request and returns the response.
-func makeRequest(request *http.Request) (*http.Response, error) {
-	client := exports.MoneroHttpClient
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-// createHTTPRequest creates an HTTP request with common headers and parameters.
-func createHTTPRequest(method, endpoint string, body []byte) (*http.Request, error) {
-	request, err := http.NewRequest(method, exports.MoneroEndpoint, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	// Set common headers
-	request.Header.Set("Content-Type", "application/json")
-
-	return request, nil
-}
-
 func GetIncomingTransfers() (TransferResult, error) {
 	data := map[string]interface{}{
 		"jsonrpc": "2.0",
@@ -189,6 +212,7 @@ func GetIncomingTransfers() (TransferResult, error) {
 
 	return transferResponse.Result, nil
 }
+
 func GetIncomingTransfersByHeight(n int) (TransferResult, error) {
 	/*
 		NOTE: this doesn't work as intended
@@ -212,11 +236,10 @@ func GetIncomingTransfersByHeight(n int) (TransferResult, error) {
 		"id":      "0",
 		"method":  "get_transfers",
 		"params": map[string]interface{}{
-			"in": true,
-
+			"in":               true,
 			"filter_by_height": true,
-			"min_height":       uint64(n - 1),
-			"max_height":       uint64(n),
+			"min_height":       n - 1000,
+			"max_height":       n,
 		},
 	}
 	jsonData, _ := json.Marshal(data)
@@ -233,10 +256,19 @@ func GetIncomingTransfersByHeight(n int) (TransferResult, error) {
 	}
 	defer response.Body.Close()
 
+	// Create a new io.Reader for the response body
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return TransferResult{}, err
+	}
+
+	// Create a new io.Reader using the bodyBytes
+	bodyReader := bytes.NewReader(bodyBytes)
+
 	var transferResponse struct {
 		Result TransferResult `json:"result,omitempty"`
 	}
-	if err := json.NewDecoder(response.Body).Decode(&transferResponse); err != nil {
+	if err := json.NewDecoder(bodyReader).Decode(&transferResponse); err != nil {
 		return TransferResult{}, err
 	}
 
@@ -275,4 +307,99 @@ func Address(accountIndex uint64) string {
 	// Extract the primary address from the response
 	address := addressResponse["result"].(map[string]interface{})["address"].(string)
 	return address
+}
+
+func ValidateAddress(address string) bool {
+	params := map[string]interface{}{
+		"address": address,
+	}
+
+	data := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "0",
+		"method":  "validate_address",
+		"params":  params,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return false
+	}
+
+	// Assuming createHTTPRequest, makeRequest, and response handling functions are defined elsewhere
+	request, _ := createHTTPRequest("POST", "json_rpc", jsonData)
+	defer request.Body.Close()
+
+	response, _ := makeRequest(request)
+	defer response.Body.Close()
+
+	var validateResponse map[string]interface{}
+	if err := json.NewDecoder(response.Body).Decode(&validateResponse); err != nil {
+		return false
+	}
+
+	// Extract the 'valid' field from the response
+	isValid := validateResponse["result"].(map[string]interface{})["valid"].(bool)
+	return isValid
+}
+
+func SendTransfer(params Transfer_Params) TransferResponse {
+	data := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "0",
+		"method":  "transfer",
+		"params":  params,
+	}
+	jsonData, _ := json.Marshal(data)
+
+	request, _ := createHTTPRequest("POST", "json_rpc", jsonData)
+	defer request.Body.Close()
+
+	response, _ := makeRequest(request)
+	defer response.Body.Close()
+
+	// Create a new io.Reader for the response body
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return TransferResponse{}
+	}
+
+	// Print or log the entire response body for debugging purposes
+	fmt.Printf("Response Body: %s\n", bodyBytes)
+
+	// Create a new io.Reader using the bodyBytes
+	bodyReader := bytes.NewReader(bodyBytes)
+
+	var transferResponse TransferResponse
+	if err := json.NewDecoder(bodyReader).Decode(&transferResponse); err != nil {
+		fmt.Printf("Error decoding JSON response: %v\n", err)
+		return TransferResponse{}
+	}
+
+	return transferResponse
+}
+
+// private methods
+
+// makeRequest sends an HTTP request and returns the response.
+func makeRequest(request *http.Request) (*http.Response, error) {
+	client := exports.MoneroHttpClient
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+// createHTTPRequest creates an HTTP request with common headers and parameters.
+func createHTTPRequest(method, endpoint string, body []byte) (*http.Request, error) {
+	request, err := http.NewRequest(method, exports.MoneroEndpoint, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	// Set common headers
+	request.Header.Set("Content-Type", "application/json")
+
+	return request, nil
 }

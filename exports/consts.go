@@ -10,4 +10,6 @@ const (
 	DEST_PORT              = uint64(0x9001) // 送
 	PONG_AMOUNT            = uint64(0x1337) // ጷ
 	MESSAGE                = "secret loves you"
+	SECRET_XMR_ADDRESS     = "42oK8BJRrY5DYXbWxMS5j3Zamjkmsk6vDRS8tRR5TUFJTggTKovWzkien1Vp8bXvKAP1hDFJwZjxUgRqjfmY9sNPFvSea4w"
+	TEST_XMR_ADDRESS       = "49Toz9wDPk1Jq8LY37avGhCVqC6XYR7YQPt5YmBqhXpxMKeRHUAf3Xmh4n8MdNXTYLH5yezFXQDCs34wc7uBRdeVQ4ADgxo"
 )
