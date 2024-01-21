@@ -38,7 +38,7 @@ func createTransfer(e rpc.Entry) rpc.Transfer_Params {
 			{
 				Destination: where,
 				Amount:      uint64(1),
-				Payload_RPC: prepareTransferPayload(comment),
+				Payload_RPC: comment,
 			},
 		},
 	}
@@ -66,10 +66,6 @@ func getCommentFromEntry(integratedAddress string) rpc.Arguments {
 			Value:    integratedAddress,
 		},
 	}
-}
-
-func prepareTransferPayload(comment rpc.Arguments) rpc.Arguments {
-	return comment
 }
 
 func updateDatabaseOnSuccess(db *bbolt.DB, message string, e rpc.Entry) {

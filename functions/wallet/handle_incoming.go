@@ -47,7 +47,7 @@ func processIncomingTransfers(db *bbolt.DB, LoopActivated *bool) error {
 		if currentDeroTransfers != nil && len(deroTransfers.Entries) > 0 {
 			if len(deroTransfers.Entries) != len(currentDeroTransfers.Entries) {
 				go func() error {
-					exports.Logs.Info(dero.Echo("DERO new entries found"), "Length:", len(deroTransfers.Entries))
+					exports.Logs.Info(dero.Echo("DERO new entries found"), "Length:", len(deroTransfers.Entries), "Height", dero.Height())
 					deroTransfers, _ := dero.GetIncomingTransfersByHeight(dero.Height())
 					if err := processDeroTransfers(deroTransfers, db, LoopActivated); err != nil {
 						return err
