@@ -1,11 +1,11 @@
-package generators_test
+package tests
 
 import (
 	"testing"
 
 	"github.com/deroproject/derohe/rpc"
 	"github.com/secretnamebasis/secret-app/exports"
-	"github.com/secretnamebasis/secret-app/functions/wallet/generators"
+	"github.com/secretnamebasis/secret-app/functions/generators"
 )
 
 func TestGenerators(t *testing.T) {

@@ -1,8 +1,9 @@
-package monero_test
+package tests
 
 import (
 	"testing"
 
+	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/wallet/monero"
 )
 
@@ -29,6 +30,7 @@ var entry = []monero.Entry{
 }
 
 func TestMoneroWallet(t *testing.T) {
+
 	t.Run("Test Monero Height",
 		func(t *testing.T) {
 			got := monero.Height()
@@ -49,6 +51,14 @@ func TestMoneroWallet(t *testing.T) {
 		given := uint64(0)
 		got := monero.Address(given)
 		if got == "" {
+			t.Errorf("err.Error()")
+		}
+	},
+	)
+	t.Run("Test Valid Monero Address", func(t *testing.T) {
+		given := "42oK8BJRrY5DYXbWxMS5j3Zamjkmsk6vDRS8tRR5TUFJTggTKovWzkien1Vp8bXvKAP1hDFJwZjxUgRqjfmY9sNPFvSea4w"
+		got := monero.ValidateAddress(given)
+		if got != true {
 			t.Errorf("err.Error()")
 		}
 	},
@@ -84,4 +94,23 @@ func TestMoneroWallet(t *testing.T) {
 			}
 		},
 	)
+}
+func TestSendXMRTransfer(t *testing.T) {
+	where := exports.TEST_XMR_ADDRESS
+
+	given := monero.Transfer_Params{
+		Destinations: []monero.Transfer{
+			{
+				Amount:  100000000, // Amount in atomic units, adjust as needed
+				Address: where,
+				// Add other fields as needed
+			},
+			// Add more Transfer objects as needed
+		},
+	}
+
+	got := monero.SendTransfer(given)
+	if len(got.Result.TxHash) != 64 {
+		t.Errorf("Failed to send Monero transfer: %s", got.Result.TxHash)
+	}
 }
