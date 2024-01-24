@@ -97,15 +97,15 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	deroUsername = os.Getenv("DERO_USERNAME")
-	deroPassword = os.Getenv("DERO_PASSWORD")
-	deroIp = os.Getenv("DERO_IP")
-	deroPort = os.Getenv("DERO_PORT")
+	deroUsername = os.Getenv("DERO_WALLET_USER")
+	deroPassword = os.Getenv("DERO_WALLET_PASS")
+	deroIp = os.Getenv("DERO_SERVER_IP")
+	deroPort = os.Getenv("DERO_WALLET_PORT")
 	deroEndpoint = "http://" + deroIp + ":" + deroPort + "/json_rpc"
-	moneroUsername = os.Getenv("MONERO_USERNAME")
-	moneroPassword = os.Getenv("MONERO_PASSWORD")
-	moneroIp = os.Getenv("MONERO_IP")
-	moneroPort = os.Getenv("MONERO_PORT")
+	moneroUsername = os.Getenv("MONERO_WALLET_USER")
+	moneroPassword = os.Getenv("MONERO_WALLET_PASS")
+	moneroIp = os.Getenv("MONERO_SERVER_IP")
+	moneroPort = os.Getenv("MONERO_WALLET_PORT")
 	MoneroEndpoint = "http://" + moneroIp + ":" + moneroPort + "/json_rpc"
 
 	DeroHttpClient = &http.Client{
