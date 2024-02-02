@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+            min-height: 93vh;
+        }
+
+        header,
+        footer {
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 600px; /* Limit the maximum width of the content */
+            width: 100%; /* Make sure the width is 100% of the available space */
+            margin: 0 auto; /* Center the content horizontally */
+        }
+
+        section {
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #ffffff;
+        }
+
+        .service-address {
+            word-wrap: break-word; /* Allow long words to break and wrap */
+        }
+
+        footer {
+            margin-top: auto;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Payment Page</h1>
+    </header>
+
+    <main>
+        <section>
+            <h2>Confirm Your Order Details:</h2>
+            <p>Name: {{.Name}}</p>
+            <p>Address:  {{.Address}}</p>
+            <p>Payment Request:</p>
+            <div class="service-address"></pre>
+                {{.ServiceAddress}}
+            </div>
+            <!-- Add payment form or details here -->
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 | secretnamebasis </p>
+    </footer>
+</body>
+
+</html>

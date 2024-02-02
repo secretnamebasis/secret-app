@@ -3,8 +3,10 @@ package code
 import (
 	"fmt"
 
+	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
-
+	"github.com/secretnamebasis/secret-app/site"
+	"github.com/secretnamebasis/secret-app/site/config"
 )
 
 const (
@@ -15,6 +17,13 @@ const (
 
 func Run() error {
 	setupLogger()
+	go func() {
+		app := site.MakeWebsite()
+		config := config.Server{Port: 3000}
+		if err := site.StartServer(app, config.Port); err != nil {
+			exports.Logs.Error(err, "Error starting server")
+		}
+	}()
 
 	if err := checkWalletConnection(); err != nil {
 		return fmt.Errorf("Failed to establish wallet connection: %v", err)
@@ -29,6 +38,7 @@ func Run() error {
 		return fmt.Errorf("Failed to create DERO database: %v", err)
 	}
 
+	// Log wallet info with items
 	logWalletInfo(deroDBName, dero.Address())
 
 	if err := performWalletOperations(deroDB); err != nil {
