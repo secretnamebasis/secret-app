@@ -69,10 +69,8 @@ func performWalletOperations(deroDB *bbolt.DB) error {
 	return wallet.IncomingTransfers(deroDB)
 }
 
-func logWalletInfo(deroDBName string, deroAddress string) {
-	exports.Logs.Info(dero.Echo("DERO ID Created: " + deroDBName))
-	exports.Logs.Info(dero.Echo("DERO Address: " + deroAddress))
-	exports.Logs.Info(dero.Echo("Monero Address: " + monero.Address(0)))
-	exports.Logs.Info(dero.Echo("DERO Integrated Address with Expected Arguments: " + dero.CreateServiceAddress(deroAddress)))
-	exports.Logs.Info(dero.Echo("DERO Integrated Address without Hardcoded Value: " + dero.CreateServiceAddressWithoutHardcodedValue(deroAddress)))
+func logWalletInfo(deroDBName, deroAddress string) {
+	exports.Logs.Info(dero.Echo("DB"), "DB", deroDBName)
+	exports.Logs.Info(dero.Echo("Address"), "Monero", monero.Address(0))
+	exports.Logs.Info(dero.Echo("Address"), "DERO", dero.Address())
 }

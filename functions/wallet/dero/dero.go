@@ -102,9 +102,10 @@ func GetIncomingTransfersByHeight(h int) (*rpc.Get_Transfers_Result, error) {
 	return &transfers, nil
 }
 
-func CreateServiceAddress(addr string) string {
-	clone, err = rpc.NewAddress(addr)
+func CreateServiceAddress(order string) string {
+	clone, err = rpc.NewAddress(Address())
 	service_address := clone.Clone()
+	exports.Expected_arguments[1].Value = order
 	service_address.Arguments = exports.Expected_arguments
 	return service_address.String()
 }

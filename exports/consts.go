@@ -2,7 +2,7 @@ package exports
 
 const (
 	DEVELOPER_ADDRESS      = "dero1qyvqpdftj8r6005xs20rnflakmwa5pdxg9vcjzdcuywq2t8skqhvwqglt6x0g"
-	SECRET_WALLET_ADDRESS  = "dero1qyw4fl3dupcg5qlrcsvcedze507q9u67lxfpu8kgnzp04aq73yheqqg2ctjn4"
+	SECRET_WALLET_ADDRESS  = "dero1qykz2fqtptcnvmr65042jwljpwmglnezax4wms5w4htat20vzsdauqq58979y"
 	CAPTAIN_WALLET_ADDRESS = "dero1qykyta6ntpd27nl0yq4xtzaf4ls6p5e9pqu0k2x4x3pqq5xavjsdxqgny8270"
 	B_WALDO_WALLET_ADDRESS = "dero1qyynlr0sv0kuj3g7k7g52hu0sk0kfwzxwzatz0q66f0slcjfwv7fsqq2etgd3"
 	DEVELOPER_NAME         = "secretnamebasis"

@@ -61,10 +61,12 @@ func TestWallet(t *testing.T) {
 			}
 		},
 	)
+
 	t.Run(
 		"TestWalletCreateServiceAddress",
 		func(t *testing.T) {
-			given := exports.DEVELOPER_ADDRESS
+			// 113 characters of the 128 limit
+			given := "name:Someone Awesome|address:12345 Main Street, APT 12345, Some City, Great State, 12345-12345, Fantastic Country"
 			got := dero.CreateServiceAddress(given)
 			if got == "" {
 				t.Errorf("got %s", got)
@@ -74,7 +76,8 @@ func TestWallet(t *testing.T) {
 	t.Run(
 		"TestWalletCreateServiceAddressWithoutHardcodedValue",
 		func(t *testing.T) {
-			got := dero.CreateServiceAddressWithoutHardcodedValue(dero.CreateServiceAddress(exports.DEVELOPER_ADDRESS))
+			given := "words"
+			got := dero.CreateServiceAddressWithoutHardcodedValue(dero.CreateServiceAddress(given))
 			if got == "" {
 				t.Errorf("got %s", got)
 			}
