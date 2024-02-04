@@ -15,7 +15,7 @@ func request(e rpc.Entry, message string, db *bbolt.DB) {
 		// so if they don't have an replyback, that's okay
 		// exports.Logs.Error(nil, fmt.Sprintf("user has not give his address so we cannot replyback")) // this is an unexpected situation
 		// return nil
-		noReplyBackRequest(e, message, db)
+		// noReplyBackRequest(e, message, db)
 	} else {
 		switch value := e.Amount; value {
 		case uint64(exports.PONG_AMOUNT):
