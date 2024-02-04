@@ -9,20 +9,17 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/deroproject/derohe/rpc"
 	"github.com/gofiber/fiber/v2"
 	"github.com/secretnamebasis/secret-app/exports"
 	"github.com/secretnamebasis/secret-app/functions/wallet/dero"
+	"github.com/secretnamebasis/secret-app/site/models"
 )
-
-type HomeData struct {
-	Title string
-	Dev   string
-}
 
 func Home(c *fiber.Ctx) error {
 
 	// Define data for rendering the template
-	data := HomeData{
+	data := models.HomeData{
 		Title: exports.APP_NAME,
 		Dev:   dero.Address(),
 	}
@@ -46,7 +43,121 @@ func Home(c *fiber.Ctx) error {
 	return nil
 }
 
-func SubmitForm(c *fiber.Ctx) error {
+func EntryPage(c *fiber.Ctx) error {
+
+	// Define data for rendering the template
+	data := models.HomeData{
+		Title: exports.APP_NAME,
+		Dev:   dero.Address(),
+	}
+
+	tmpl, err := template.ParseFiles("./site/public/entry.html")
+	if err != nil {
+		fmt.Println("Error parsing template:", err)
+		return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+	}
+
+	// Execute the template with the provided data
+	err = tmpl.Execute(c.Response().BodyWriter(), data)
+	if err != nil {
+		fmt.Println("Error executing template:", err)
+		return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+	}
+
+	// Set the Content-Type header
+	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
+
+	return nil
+}
+
+func SubmitEntryForm(c *fiber.Ctx) error {
+	// Get form data from the request
+	title := c.FormValue("title")
+	entry := c.FormValue("entry")
+
+	// Check if the entry exceeds the character limit
+	if len(entry) > 120 {
+		// Handle the error (you can choose to display an error message or redirect back to the form)
+		return c.Status(http.StatusBadRequest).SendString("Entry must be 120 characters or less")
+	}
+
+	// Redirect to the pay page with the form data
+	return c.Redirect("/success?title=" + title)
+}
+
+func EntriesPage(c *fiber.Ctx) error {
+	entries, err := dero.GetOutgoingTransfers()
+	if err != nil {
+		// Return a 500 Internal Server Error with a meaningful message
+		return c.Status(http.StatusInternalServerError).SendString("Error fetching entries: " + err.Error())
+	}
+
+	// Reverse the order of entries
+	reversedEntries := reverseEntries(entries.Entries)
+
+	// Define data for rendering the template
+	data := models.EntriesData{
+		Title:   exports.APP_NAME,
+		Dev:     dero.Address(),
+		Entries: reversedEntries,
+	}
+
+	tmpl, err := template.ParseFiles("./site/public/entries.html")
+	if err != nil {
+		// Return a 500 Internal Server Error with a meaningful message
+		return c.Status(http.StatusInternalServerError).SendString("Error parsing template: " + err.Error())
+	}
+
+	// Execute the template with the provided data
+	err = tmpl.Execute(c.Response().BodyWriter(), data)
+	if err != nil {
+		// Return a 500 Internal Server Error with a meaningful message
+		return c.Status(http.StatusInternalServerError).SendString("Error executing template: " + err.Error())
+	}
+
+	// Set the Content-Type header
+	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
+
+	return nil
+}
+
+// reverseEntries reverses the order of entries
+func reverseEntries(entries []rpc.Entry) []rpc.Entry {
+	reversed := make([]rpc.Entry, len(entries))
+	for i, entry := range entries {
+		reversed[len(entries)-1-i] = entry
+	}
+	return reversed
+}
+
+func OrderPage(c *fiber.Ctx) error {
+
+	// Define data for rendering the template
+	data := models.HomeData{
+		Title: exports.APP_NAME,
+		Dev:   dero.Address(),
+	}
+
+	tmpl, err := template.ParseFiles("./site/public/order.html")
+	if err != nil {
+		fmt.Println("Error parsing template:", err)
+		return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+	}
+
+	// Execute the template with the provided data
+	err = tmpl.Execute(c.Response().BodyWriter(), data)
+	if err != nil {
+		fmt.Println("Error executing template:", err)
+		return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")
+	}
+
+	// Set the Content-Type header
+	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
+
+	return nil
+}
+
+func SubmitOrderForm(c *fiber.Ctx) error {
 	// Get form data from the request
 	name := c.FormValue("name")
 	address := c.FormValue("address")
@@ -67,7 +178,7 @@ func PayPage(c *fiber.Ctx) error {
 
 	// Replace newline characters with HTML line breaks
 	addressWithBreaks := strings.ReplaceAll(address, "\n", "<br>")
-	fmt.Printf(addressWithBreaks)
+	fmt.Println(addressWithBreaks)
 	// Prepare data for rendering the pay page template
 	data := struct {
 		Name           string
@@ -100,9 +211,6 @@ func PayPage(c *fiber.Ctx) error {
 
 	return nil
 }
-
-// views/views.go
-// ...
 
 func SuccessPage(c *fiber.Ctx) error {
 	// Log template path (for debugging purposes)

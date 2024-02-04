@@ -1,0 +1,110 @@
+<!-- entries.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #000000;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        main {
+            margin: 20px;
+        }
+
+        section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #4285f4;
+        }
+
+        div {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        h3 {
+            color: #4285f4;
+        }
+
+        h4 {
+            color: #4285f4;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        footer {
+            background-color: #000000;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{.Title}}</h1>
+    </header>
+
+    <main>
+        <section>
+            <h2>Entries</h2>
+            <!-- Loop through entries and display them -->
+            {{with .Entries}}
+                {{range .}}
+                    {{if and (eq .Amount 0) (eq .DestinationPort 1337) (gt (len .Payload_RPC) 0)}}
+                        <div>
+                            <h3>Time: {{.Time}}</h3>
+                            <p>Amount: {{.Amount}}</p>
+                            <p>Fees: {{.Fees}}</p>
+                            <h4>Payload_RPC:</h4>
+                            <ul>
+                                {{range .Payload_RPC}}
+                                    {{if and (eq .DataType "S") (eq .Name "C")}}
+                                        <li>{{.Value}}</li>
+                                    {{end}}
+                                {{end}}
+                            </ul>
+                            <p>DestinationPort: {{.DestinationPort}}</p>
+                        </div>
+                    {{end}}
+                {{end}}
+            {{end}}
+        </section>
+    </main>
+
+    <footer>
+        <p>Donations and Private messages: </p>
+        <p><span class="dev">{{.Dev}}</span></p>
+        <p>&copy; 2024 | secretnamebasis </p>
+    </footer>
+</body>
+</html>

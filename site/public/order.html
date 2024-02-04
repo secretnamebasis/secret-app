@@ -85,11 +85,20 @@ footer p {
     </header>
 
     <main>
-        <p><a href="/entry">Go to Entry</a></p>
-        <p><a href="/order">Go to Order</a></p>
-        <!-- Add other content as needed -->
+        <section>
+            <h2>Order</h2>
+            <!-- Add form for name and address submission -->
+            <form action="/submit/order" method="post">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                <br>
+                <label for="address">Address:</label>
+                <textarea id="address" name="address" rows="4" cols="50" required></textarea>
+                <br>
+                <input type="submit" value="Submit">
+            </form>
+        </section>
     </main>
-    
 
     <footer>
         <p>Donations and Private messages: </p>
