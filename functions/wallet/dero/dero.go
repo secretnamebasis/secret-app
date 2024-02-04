@@ -67,7 +67,8 @@ func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
 		&transfers,
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
-			In: true,
+			In:       true,
+			Coinbase: false,
 		},
 	)
 	if err != nil {
@@ -100,6 +101,25 @@ func GetIncomingTransfersByHeight(h int) (*rpc.Get_Transfers_Result, error) {
 	}
 
 	return &transfers, nil
+}
+
+func GetOutgoingTransfers() (rpc.Get_Transfers_Result, error) {
+
+	err = exports.DeroRpcClient.CallFor(
+		&transfers,
+		"GetTransfers",
+		rpc.Get_Transfers_Params{
+			In:       false,
+			Out:      true,
+			Coinbase: false,
+		},
+	)
+	if err != nil {
+		exports.Logs.Error(err, "Could not obtain gettransfers from wallet")
+		return transfers, err
+	}
+
+	return transfers, nil
 }
 
 func CreateServiceAddress(order string) string {
