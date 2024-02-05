@@ -6,77 +6,66 @@
     <title>{{.Title}}</title>
 
     <style>
-       body {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #000;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center content horizontally */
-    min-height: 93vh;
-}
-
-header, footer {
-    background-color: #000;
-    color: #fff;
-    text-align: center;
-    padding: 10px;
-}
-
-header h1 {
-    margin: 0;
-}
-
-main {
-    flex: 1;
-    padding: 20px;
-}
-
-section {
-    margin-bottom: 20px;
-}
-
-label {
-    display: block; /* Make labels block-level elements to stack them vertically */
-    margin-bottom: 5px;
-}
-
-input[type="text"],
-textarea {
-    width: 100%; /* Make both input and textarea take 100% width */
-    padding: 8px; /* Adjust padding as needed */
-    box-sizing: border-box; /* Include padding in the width */
-    margin-bottom: 10px; /* Add some space between input elements */
-}
-
-input[type="submit"] {
-    background-color: #4285f4;
-    color: #fff;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-input[type="submit"]:hover {
-    background-color: #2a4d85;
-}
-
-footer {
-    margin-top: auto;
-}
-
-footer p {
-    margin: 5px 0;
-}
-
-.address {
-    font-weight: bold;
-    font-size: x-small;
-}
-
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+            min-height: 93vh;
+        }
+        
+        header, footer {
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        header h1 {
+            margin: 0;
+        }
+        
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 600px; /* Limit the maximum width of the content */
+            width: 100%; /* Make sure the width is 100% of the available space */
+            margin: 0 auto; /* Center the content horizontally */
+        }
+        
+        section {
+            margin-bottom: 20px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        a {
+            color: #4285f4;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            margin-top: auto;
+        }
+        
+        footer p {
+            margin: 5px 0;
+        }
+        
+        .address {
+            font-weight: bold;
+            font-size: x-small;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +75,6 @@ footer p {
 
     <main>
         <p><a href="/entry">Go to Entry</a></p>
-        <p><a href="/order">Go to Order</a></p>
         <!-- Add other content as needed -->
     </main>
     

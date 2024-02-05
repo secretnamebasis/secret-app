@@ -1,15 +1,98 @@
-<!-- success.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success Page</title>
+    <title>{{.Title}}</title>
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center content horizontally */
+            min-height: 93vh;
+        }
+
+        header,
+        footer {
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            max-width: 600px; /* Limit the maximum width of the content */
+            width: 100%; /* Make sure the width is 100% of the available space */
+            margin: 0 auto; /* Center the content horizontally */
+        }
+        
+        section {
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 20px; /* Add space between sections */
+        }
+
+        h2 {
+            color: #4285f4;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        footer {
+            margin-top: auto;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        .txid {
+            word-wrap: break-word; /* Allow long words to break and wrap */
+            font-family: monospace; /* Use monospace font for better readability of TXID */
+        }
+
+        .address {
+            font-weight: bold;
+            font-size: x-small;
+        }
+    </style>
 </head>
 <body>
-    <h1>Success!</h1>
-    <p>Your submission was successful.</p>
-    <!-- Add any additional content or styling as needed -->
+    <header>
+        <h1> {{.Title}} </h1>
+    </header>
+
+    <main>
+        <section>
+            <h2>Success!</h2>
+            <p>You will be pleased to know that your submission has been saved</p> 
+            <br>
+            <p>TXID: <pre><span class="txid">{{.Txid}}</span></pre></p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Donations and Private messages: </p>
+        <p><span class="dev">{{.Dev}}</span></p>
+        <p>&copy; 2024 | secretnamebasis </p>
+    </footer>
 </body>
 </html>

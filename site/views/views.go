@@ -71,18 +71,91 @@ func EntryPage(c *fiber.Ctx) error {
 }
 
 func SubmitEntryForm(c *fiber.Ctx) error {
-	// Get form data from the request
-	title := c.FormValue("title")
 	entry := c.FormValue("entry")
 
 	// Check if the entry exceeds the character limit
 	if len(entry) > 120 {
-		// Handle the error (you can choose to display an error message or redirect back to the form)
-		return c.Status(http.StatusBadRequest).SendString("Entry must be 120 characters or less")
+		// Split the entry into chunks of 120 characters
+		chunks := chunkString(entry, 120)
+
+		// Create a list to store transfers
+		var transfers []rpc.Transfer
+
+		// Iterate over the chunks and create a transfer for each
+		for _, chunk := range chunks {
+			payload := rpc.Arguments{
+				{
+					Name:     rpc.RPC_DESTINATION_PORT,
+					DataType: rpc.DataUint64,
+					Value:    uint64(1337),
+				},
+				{
+					Name:     rpc.RPC_COMMENT,
+					DataType: rpc.DataString,
+					Value:    chunk,
+				},
+			}
+			transfer := rpc.Transfer{
+				Destination: exports.ALT_DEVELOPER_ADDRESS,
+				Amount:      uint64(0),
+				Payload_RPC: payload,
+			}
+			transfers = append(transfers, transfer)
+		}
+
+		// Create Transfer_Params with the list of transfers
+		transferParams := rpc.Transfer_Params{
+			Transfers: transfers,
+		}
+
+		// Send the transfers
+		result := dero.SendTransfer(transferParams)
+
+		// Handle the result as needed
+		fmt.Println("Transfer result:", result)
+
+		// Redirect to the success page or handle the result accordingly
+		return c.Redirect("/success?result=" + result)
 	}
 
-	// Redirect to the pay page with the form data
-	return c.Redirect("/success?title=" + title)
+	// If the entry is within the character limit, proceed as before
+	payload := rpc.Arguments{
+		{
+			Name:     rpc.RPC_DESTINATION_PORT,
+			DataType: rpc.DataUint64,
+			Value:    uint64(1337),
+		},
+		{
+			Name:     rpc.RPC_COMMENT,
+			DataType: rpc.DataString,
+			Value:    entry,
+		},
+	}
+	transfer := rpc.Transfer{
+		Destination: exports.ALT_DEVELOPER_ADDRESS,
+		Amount:      uint64(0),
+		Payload_RPC: payload,
+	}
+	transferParams := rpc.Transfer_Params{
+		Transfers: []rpc.Transfer{transfer},
+	}
+	result := dero.SendTransfer(transferParams)
+
+	// Redirect to the success page with the form data
+	return c.Redirect("/success?result=" + result)
+}
+
+// Function to split a string into chunks of a specified size
+func chunkString(s string, chunkSize int) []string {
+	var chunks []string
+	for i := 0; i < len(s); i += chunkSize {
+		end := i + chunkSize
+		if end > len(s) {
+			end = len(s)
+		}
+		chunks = append(chunks, s[i:end])
+	}
+	return chunks
 }
 
 func EntriesPage(c *fiber.Ctx) error {
@@ -92,14 +165,11 @@ func EntriesPage(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).SendString("Error fetching entries: " + err.Error())
 	}
 
-	// Reverse the order of entries
-	reversedEntries := reverseEntries(entries.Entries)
-
 	// Define data for rendering the template
 	data := models.EntriesData{
 		Title:   exports.APP_NAME,
 		Dev:     dero.Address(),
-		Entries: reversedEntries,
+		Entries: entries.Entries,
 	}
 
 	tmpl, err := template.ParseFiles("./site/public/entries.html")
@@ -119,15 +189,6 @@ func EntriesPage(c *fiber.Ctx) error {
 	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
 
 	return nil
-}
-
-// reverseEntries reverses the order of entries
-func reverseEntries(entries []rpc.Entry) []rpc.Entry {
-	reversed := make([]rpc.Entry, len(entries))
-	for i, entry := range entries {
-		reversed[len(entries)-1-i] = entry
-	}
-	return reversed
 }
 
 func OrderPage(c *fiber.Ctx) error {
@@ -213,6 +274,13 @@ func PayPage(c *fiber.Ctx) error {
 }
 
 func SuccessPage(c *fiber.Ctx) error {
+	result := c.Query("result")
+
+	data := models.SuccessData{
+		Title: exports.APP_NAME,
+		Txid:  result,
+		Dev:   dero.Address(),
+	}
 	// Log template path (for debugging purposes)
 	templatePath := "./site/public/success.html"
 
@@ -223,7 +291,7 @@ func SuccessPage(c *fiber.Ctx) error {
 	}
 
 	// Execute the success template
-	err = tmpl.Execute(c.Response().BodyWriter(), nil)
+	err = tmpl.Execute(c.Response().BodyWriter(), data)
 	if err != nil {
 		fmt.Println("Error executing success template:", err)
 		return c.Status(http.StatusInternalServerError).SendString("Internal Server Error")

@@ -4,101 +4,122 @@
 <head>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 93vh;
         }
 
-        header {
-            background-color: #000000;
-            color: white;
-            padding: 10px;
+        header, footer {
+            background-color: #000;
+            color: #fff;
             text-align: center;
+            padding: 10px;
+        }
+
+        header h1 {
+            margin: 0;
         }
 
         main {
-            margin: 20px;
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         section {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 20px; /* Add margin between Entries and New Entry button */
         }
 
         h2 {
             color: #4285f4;
         }
 
-        div {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-
-        h3 {
-            color: #4285f4;
-        }
-
-        h4 {
-            color: #4285f4;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        li {
-            margin-bottom: 5px;
+        p {
+            margin-bottom: 15px;
         }
 
         footer {
-            background-color: #000000;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            margin-top: auto;
+        }
+
+        footer p {
+            margin: 5px 0;
+        }
+
+        .address {
+            font-weight: bold;
+            font-size: x-small;
+        }
+
+        /* Style for the time in entries */
+        .entry-time {
+            font-size: small; /* Adjust the font size to make it understated */
+            color: #777; /* Adjust the color for subtlety */
         }
     </style>
 </head>
 <body>
     <header>
         <h1>{{.Title}}</h1>
+        <br>
+        <a class="go-to-bottom" href="#bottom">Go to Current</a>
     </header>
 
     <main>
         <section>
             <h2>Entries</h2>
-            <!-- Loop through entries and display them -->
             {{with .Entries}}
+                {{ $lastTime := "" }}
+                {{ $concatenatedValues := "" }}
                 {{range .}}
                     {{if and (eq .Amount 0) (eq .DestinationPort 1337) (gt (len .Payload_RPC) 0)}}
+                        {{if ne $lastTime .Time.String}}
+                            <!-- Output previous entry if not the first iteration -->
+                            {{if ne $lastTime ""}}
+                                <div>
+                                    
+                                    <p>{{ $concatenatedValues }}</p>
+                                </div>
+                            {{end}}
+                            <!-- Reset the concatenated values for the new timestamp -->
+                            {{ $concatenatedValues = "" }}
+                        {{end}}
                         <div>
-                            <h3>Time: {{.Time}}</h3>
-                            <p>Amount: {{.Amount}}</p>
-                            <p>Fees: {{.Fees}}</p>
-                            <h4>Payload_RPC:</h4>
-                            <ul>
-                                {{range .Payload_RPC}}
-                                    {{if and (eq .DataType "S") (eq .Name "C")}}
-                                        <li>{{.Value}}</li>
-                                    {{end}}
+                            <!-- Display timestamp only when it changes -->
+                            {{if ne $lastTime .Time.String}}
+                                <p class="entry-time">{{.Time.String}}</p>
+                            {{end}}
+                            {{range .Payload_RPC}}
+                                {{if and (eq .DataType "S") (eq .Name "C")}}
+                                    {{ $concatenatedValues = printf "%s\n%s" $concatenatedValues .Value }}
                                 {{end}}
-                            </ul>
-                            <p>DestinationPort: {{.DestinationPort}}</p>
+                            {{end}}
                         </div>
+                        {{ $lastTime = .Time.String }}
                     {{end}}
+                {{end}}
+                <!-- Output the last entry after the loop -->
+                {{if and (ne $lastTime "") (ne $concatenatedValues "")}}
+                    <div>
+                        
+                        <p>{{ $concatenatedValues }}</p>
+                    </div>
                 {{end}}
             {{end}}
         </section>
+
+        <!-- New Entry button using anchor tag without JavaScript -->
+        <a class="new-entry" href="/entry">New Entry</a>
     </main>
 
     <footer>
@@ -106,5 +127,8 @@
         <p><span class="dev">{{.Dev}}</span></p>
         <p>&copy; 2024 | secretnamebasis </p>
     </footer>
+
+    <!-- Anchor link at the bottom of the page -->
+    <a id="bottom"></a>
 </body>
 </html>

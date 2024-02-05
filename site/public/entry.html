@@ -6,77 +6,91 @@
     <title>{{.Title}}</title>
 
     <style>
-       body {
-    font-family: 'Roboto', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #000;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Center content horizontally */
-    min-height: 93vh;
-}
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Center content horizontally */
+            min-height: 93vh;
+        }
 
-header, footer {
-    background-color: #000;
-    color: #fff;
-    text-align: center;
-    padding: 10px;
-}
+        header,
+        footer {
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+        }
 
-header h1 {
-    margin: 0;
-}
+        header h1 {
+            margin: 0;
+        }
 
-main {
-    flex: 1;
-    padding: 20px;
-}
+        main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-section {
-    margin-bottom: 20px;
-}
+        section {
+            max-width: 600px;
+            width: 100%;
+        }
 
-label {
-    display: block; /* Make labels block-level elements to stack them vertically */
-    margin-bottom: 5px;
-}
+        h2 {
+            color: #4285f4;
+        }
 
-input[type="text"],
-textarea {
-    width: 100%; /* Make both input and textarea take 100% width */
-    padding: 8px; /* Adjust padding as needed */
-    box-sizing: border-box; /* Include padding in the width */
-    margin-bottom: 10px; /* Add some space between input elements */
-}
+        label {
+            display: block;
+            /* Make labels block-level elements to stack them vertically */
+            margin-bottom: 5px;
+            color: #4285f4;
+        }
 
-input[type="submit"] {
-    background-color: #4285f4;
-    color: #fff;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            background-color: #000;
+            color: #fff;
+            border: 2px solid #fff; /* White outline */
+            border-radius: 5px;
+        }
 
-input[type="submit"]:hover {
-    background-color: #2a4d85;
-}
+        input[type="submit"] {
+            background-color: #4285f4;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
-footer {
-    margin-top: auto;
-}
+        input[type="submit"]:hover {
+            background-color: #2a4d85;
+        }
 
-footer p {
-    margin: 5px 0;
-}
+        footer {
+            margin-top: auto;
+        }
 
-.address {
-    font-weight: bold;
-    font-size: x-small;
-}
+        footer p {
+            margin: 5px 0;
+        }
 
+        .address {
+            font-weight: bold;
+            font-size: x-small;
+        }
     </style>
 </head>
 <body>
@@ -86,14 +100,9 @@ footer p {
 
     <main>
         <section>
-            <h2>Entry</h2>
-            <!-- Add form for name and address submission -->
             <form action="/submit/entry" method="post">
-                <label for="title">title:</label>
-                <input type="text" id="title" name="title" required>
-                <br>
-                <label for="entry">entry:</label>
-                <textarea id="entry" name="entry" rows="4" cols="50" maxlength="120" required></textarea>
+                <label for="entry">Entry:</label>
+                <textarea id="entry" name="entry" rows="4" cols="50" maxlength="12000" required></textarea>
                 <br>
                 <input type="submit" value="Submit">
             </form>
