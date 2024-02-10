@@ -11,18 +11,19 @@ import (
 var err error
 var clone *rpc.Address
 var transfers rpc.Get_Transfers_Result
+var balance rpc.GetBalance_Result
 
 func Connection() bool {
 	s := Address()
 	test := Echo(s)
-	if test != "WALLET "+s+"\n" {
-		return false
-	}
-	return true
+	return test != "WALLET "+s+"\n"
 }
 
 func Height() int {
-	err = exports.DeroRpcClient.CallFor(&exports.WalletHeight, "GetHeight")
+	err = exports.DeroRpcClient.CallFor(
+		&exports.WalletHeight,
+		"GetHeight",
+	)
 	if err != nil || exports.WalletHeight.Height == 0 {
 		fmt.Printf("Could not obtain address from wallet err %s\n", err)
 		return 0
@@ -59,6 +60,15 @@ func SendTransfer(params rpc.Transfer_Params) string {
 		exports.Logs.Error(err, Echo("TXID is \"\" string"))
 	}
 	return transfers.TXID
+}
+
+func GetBalance() (rpc.GetBalance_Result, error) {
+
+	err = exports.DeroRpcClient.CallFor(
+		&balance,
+		"GetBalance",
+	)
+	return balance, nil
 }
 
 func GetIncomingTransfers() (rpc.Get_Transfers_Result, error) {
@@ -110,6 +120,25 @@ func GetOutgoingTransfers() (rpc.Get_Transfers_Result, error) {
 		"GetTransfers",
 		rpc.Get_Transfers_Params{
 			In:       false,
+			Out:      true,
+			Coinbase: false,
+		},
+	)
+	if err != nil {
+		exports.Logs.Error(err, "Could not obtain gettransfers from wallet")
+		return transfers, err
+	}
+
+	return transfers, nil
+}
+
+func GetAllTransfers() (rpc.Get_Transfers_Result, error) {
+
+	err = exports.DeroRpcClient.CallFor(
+		&transfers,
+		"GetTransfers",
+		rpc.Get_Transfers_Params{
+			In:       true,
 			Out:      true,
 			Coinbase: false,
 		},
