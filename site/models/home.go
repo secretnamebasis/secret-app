@@ -1,6 +1,7 @@
 package models
 
 type HomeData struct {
-	Title string
-	Dev   string
+	Title  string
+	Dev    string
+	Height int
 }

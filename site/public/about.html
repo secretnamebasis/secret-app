@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+    <style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: calc(100vh - 100px); /* Subtract 100px from 100vh */    }
+
+    header {
+        padding: 20px; /* Adjust padding as needed */
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        margin: 0; /* Remove default margins */
+    }
+
+    /* First header */
+    header h1 {
+        margin: 0;
+    }
+
+    #icon {
+        width: 50px;
+        height: auto;
+    }
+
+    /* Second header */
+    header.center {
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+    }
+
+    header.center a {
+        margin: 0 10px;  /* Adjust margin for better spacing */
+        color: #fff;
+        text-decoration: none;
+    }
+
+    header.center a:hover {
+        text-decoration: underline;
+    }
+
+    main {
+    flex: 1;
+    padding: 20px;
+    max-width: 600px; /* Set maximum width for the box */
+    width: calc(100% - 80px); /* Set width to 100% minus padding */
+    margin: 20px auto; /* Center the box and add margin */
+    display: flex;
+    align-items: left;
+    flex-direction: column;
+    text-align: left; /* Align text to the left */
+    border: 1px solid #fff; /* Add border for visual separation */
+    }
+
+    section {
+        margin-bottom: 0px;
+    }
+
+    p {
+        margin-bottom: 0px;
+    }
+
+    a {
+        color: #4285f4;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    footer {
+        margin-top: auto;
+        position: relative;
+        bottom: 0;
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        margin: 0; /* Remove default margins */
+    }
+
+
+    footer p {
+        margin: 5px 0;
+    }
+
+    .dev {
+        font-weight: lighter;
+        font-size: xx-small;
+    }
+
+    .social-links a {
+        margin: 0 5px;
+    }
+
+    .social-links img {
+        width: 40px;
+        height: auto;
+    }
+
+    </style>
+</head>
+<body>
+    <header>
+        <img id="icon" src="alexander-the-great.png" alt="Icon">
+        <h1>{{.Title}}</h1>
+    </header>
+
+    <!-- Second header -->
+    <header class="center">
+        <a href="/">
+            <h2>Home</h2>
+        </a>
+        <a href="/about">
+            <h2>About</h2>
+        </a>
+        <!-- Add more content here as needed -->
+    </header>
+
+    <main>
+        <p>Hi 🙋</p>
+        <p>
+            My name is secret, secretnamebasis.
+        </p>
+        <p>
+            Let's get one thing straight: I ❤️ 
+            <a href="https://dero.io">DERO</a>
+            .
+        </p>
+        <p>
+            Now for the back story on my love of DERO... 
+        </p>
+        <p>
+            I had just read The Sovereign Individual (circa 1997) while working abroad, and I had a lot on my mind because of it. I was moved by the feirce reality that these authors created: encryption would better enable and empower the individual best able to accumulate value and information that the super political power cannot decipher or control.
+        </p> 
+        <p>            
+            So when the authors suggested taking my business online, investing in cyber money and using encryption: I did. 
+        </p>
+        <p>
+            I began posting online somewhere on Telegram in the spring of 2019 while exploring the rapidly accelerating crypto ecosystems of the time. My experience of discovering crypto was in direct relation to studying /biz/ on 4chan for genuine projects online. 
+        </p>
+        <p>
+            As a result, and you can imagine that it wasn't pretty, I learned about many of the scams and cults that surround crypto first hand. Since then, I very much wanted to bring a sane voice to the craziness that is online.
+        </p>
+        <p>
+            Having frequented /biz/, I also visited the monero general thread (it is literally always there). And one day, while people were talking about how there are no smart contracts on monero, someone suggested DERO. Shortly there after I saw a mention for 
+            <a href="tradeogre.com">TradeOgre</a>. 
+        </p>
+        <p>
+            One of the first things that you have to do when you are approaching a crypto community online is you have to start exploring the socials of that cryptocurrency. And in the fall of 2020, I encountered the DERO discord server and telegram group (now discontinued).  
+        </p>
+        <p>
+            Since Mainnet Launch in 2021, I have been advocating that others in the cyrpto world use DERO. As a privacy tool, DERO  allows users complete privacy and control of their encrypted database. I recommend that you get started today with setting up your own node. And when you need a node endpoint while you are getting set up, you can use my node:<br> 
+            <a href="http://secretnamebasis.site:10102">http://secretnamebasis.site:10102</a>
+        </p>
+        <p>
+            What really drew me in to consider DERO as THE privacy cryptocurrency was that it appeared made to spec for the authors of The Sovereign Individual. DERO features:
+        </p>
+        <ol>
+            <li>Encrypted balances</li>
+            <li>Encrypted transfers</li>
+            <li>Encrypted network</li>
+        </ol>
+        <p>
+           And some things that I really liked about DERO that I saw as improvements from other crypto currencies was:
+        </p>
+        <ol>
+            <li>I could run my own nodes, wallets and miners</li>
+            <li>Smart contracts are enabled and they are open source, auditable and human-readable</li>
+            <li>And lastly, transfers can include encrypted payloads of up to 128 bytes: think, encrypted messages</li>
+        </ol>
+        <p>
+            But I feel completely comfortable telling others to start learning about DERO and consider running hosting their own instances of the <a href = "https://github.com/deroproject/derohe">open source software</a> is that there is:
+        </p>
+        <ol>
+            <li>No Financial Investment Required</li>
+            <li>No Proproeitary Hardware Required</li>
+            <li>No Special Setup Required</li>
+        </ol>
+        <p>
+            Sharing DERO with others is one of the most important things that I have ever committed myself to because of the things that I have learned and experienced since studying and exploring DERO and its Community.
+        </p>
+        <p>
+            My life changed after the DERO developer, Captain DERO, showed me how to turn on his pong_server.go program in his discord server. Using that pong server, I started my own discord community called <a href="https://discord.gg/BKdX9qHkgu">The Secret Discord Server</a>.
+        </p>
+        <p>
+            Now, acting as an admin for a bustling community of artists, entrepreneurs, and developers, I have pursued developing applications and releasing them to the communities around DERO. Follow me on <a href="https://twitter.com/_s3cr37_n4m3_">X.com</a> to participate in the fun.
+        </p>
+        <p>
+            I am very socialable and I love to interact and engage with others on a wide variety of topics. And I recently started up a <a href="/blog">blog</a> on this website, and I hope you will share it with others.
+        </p>
+        <p>
+            I imagine that at some point I am going to make some kind of <a href="/store">store</a>. Probably with some stickers, a t-shirt, maybe a book about DERO and probably some monthly class or something. I might even consider consult as a product, but who knows. 🤷
+        </p>
+        <p>
+            But probably most important of all, I really enjoy learning and sharing and growing alongside of DERO. And as a result, I am excited to continue on this journey with you.
+        </p>
+            
+        <p>Well... talk to you soon!</p>
+    </main>
+    
+    
+    <footer>
+        <div class="social-links">
+    
+            <a href="https://github.com/secretnamebasis"><img src="github-icon.png" alt="GitHub"></a>
+            <a href="https://twitter.com/_s3cr37_n4m3_"><img src="x-icon.png" alt="X"></a>
+            <a href="https://discord.gg/BKdX9qHkgu"><img src="discord-icon.png" alt="Discord"></a>
+
+        </div>
+        <p>&copy; 2024 | secretnamebasis </p>
+        <p>Donations and Private messages: </p>
+        <p><span class="dev">{{.Dev}}</span></p>
+    </footer>
+</body>
+</html>

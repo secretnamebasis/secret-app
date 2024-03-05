@@ -34,7 +34,7 @@ var (
 	Addr         *rpc.Address
 
 	Addr_result rpc.GetAddress_Result
-	// default discard all logs
+
 	DeroHttpClient *http.Client
 
 	DeroRpcClient jsonrpc.RPCClient

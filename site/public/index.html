@@ -4,85 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
 
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center content horizontally */
-            min-height: 93vh;
-        }
-        
-        header, footer {
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-        }
-        
-        header h1 {
-            margin: 0;
-        }
-        
-        main {
-            flex: 1;
-            padding: 20px;
-            max-width: 600px; /* Limit the maximum width of the content */
-            width: 100%; /* Make sure the width is 100% of the available space */
-            margin: 0 auto; /* Center the content horizontally */
-        }
-        
-        section {
-            margin-bottom: 20px;
-        }
-        
-        p {
-            margin-bottom: 15px;
-        }
-        
-        a {
-            color: #4285f4;
-            text-decoration: none;
-        }
-        
-        a:hover {
-            text-decoration: underline;
-        }
-        
-        footer {
-            margin-top: auto;
-        }
-        
-        footer p {
-            margin: 5px 0;
-        }
-        
-        .address {
-            font-weight: bold;
-            font-size: x-small;
-        }
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: calc(100vh - 100px); /* Subtract 100px from 100vh */    }
+
+    header {
+        padding: 20px; /* Adjust padding as needed */
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        margin: 0; /* Remove default margins */
+    }
+
+    /* First header */
+    header h1 {
+        margin: 0;
+    }
+
+    #icon {
+        width: 50px;
+        height: auto;
+    }
+
+    /* Second header */
+    header.center {
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+    }
+
+    header.center a {
+        margin: 0 10px;  /* Adjust margin for better spacing */
+        color: #fff;
+        text-decoration: none;
+    }
+
+    header.center a:hover {
+        text-decoration: underline;
+    }
+
+    main {
+        flex: 1;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    section {
+        margin-bottom: 0px;
+    }
+
+    p {
+        margin-bottom: 0px;
+    }
+
+    a {
+        color: #4285f4;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    footer {
+        margin-top: auto;
+        position: relative;
+        bottom: 0;
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        margin: 0; /* Remove default margins */
+    }
+
+
+    footer p {
+        margin: 5px 0;
+    }
+
+    .dev {
+        font-weight: lighter;
+        font-size: xx-small;
+    }
+
+    .social-links a {
+        margin: 0 5px;
+    }
+
+    .social-links img {
+        width: 40px;
+        height: auto;
+    }
+
     </style>
 </head>
 <body>
     <header>
+        <img id="icon" src="alexander-the-great.png" alt="Icon">
         <h1>{{.Title}}</h1>
     </header>
 
+    <!-- Second header -->
+    <header class="center">
+        <a href="/">
+            <h2>Home</h2>
+        </a>
+        <a href="/about">
+            <h2>About</h2>
+        </a>
+        <!-- Add more content here as needed -->
+    </header>
+
     <main>
-        <p><a href="/entry">Go to Entry</a></p>
-        <!-- Add other content as needed -->
+
     </main>
     
-
     <footer>
+        <div class="social-links">
+    
+            <a href="https://github.com/secretnamebasis"><img src="github-icon.png" alt="GitHub"></a>
+            <a href="https://twitter.com/_s3cr37_n4m3_"><img src="x-icon.png" alt="X"></a>
+            <a href="https://discord.gg/BKdX9qHkgu"><img src="discord-icon.png" alt="Discord"></a>
+
+        </div>
+        <p>&copy; 2024 | secretnamebasis </p>
         <p>Donations and Private messages: </p>
         <p><span class="dev">{{.Dev}}</span></p>
-        <p>&copy; 2024 | secretnamebasis </p>
     </footer>
 </body>
 </html>

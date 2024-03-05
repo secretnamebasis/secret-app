@@ -72,7 +72,7 @@
     <header>
         <h1>{{.Title}}</h1>
         <br>
-        <a class="go-to-bottom" href="#bottom">Go to Current</a>
+        <a class="go-to-current" href="#current">Go to Current</a>
     </header>
 
     <main>
@@ -82,36 +82,35 @@
                 {{ $lastTime := "" }}
                 {{ $concatenatedValues := "" }}
                 {{range .}}
-                    {{if and (eq .Amount 0) (eq .DestinationPort 1337) (gt (len .Payload_RPC) 0)}}
+                    {{if and (eq .Amount 0)  (gt (len .Payload_RPC) 0)}}
                         {{if ne $lastTime .Time.String}}
                             <!-- Output previous entry if not the first iteration -->
                             {{if ne $lastTime ""}}
                                 <div>
-                                    
                                     <p>{{ $concatenatedValues }}</p>
                                 </div>
                             {{end}}
                             <!-- Reset the concatenated values for the new timestamp -->
                             {{ $concatenatedValues = "" }}
                         {{end}}
-                        <div>
-                            <!-- Display timestamp only when it changes -->
-                            {{if ne $lastTime .Time.String}}
-                                <p class="entry-time">{{.Time.String}}</p>
+                        <!-- Display timestamp only when it changes -->
+                        {{if ne $lastTime .Time.String}}
+                            <p class="entry-time">{{.Time.String}}</p>
+                        {{end}}
+                        {{range .Payload_RPC}}
+                            {{if and (eq .DataType "A") (eq .Name "R")}}
+                               
                             {{end}}
-                            {{range .Payload_RPC}}
-                                {{if and (eq .DataType "S") (eq .Name "C")}}
-                                    {{ $concatenatedValues = printf "%s\n%s" $concatenatedValues .Value }}
-                                {{end}}
+                            {{if and (eq .DataType "S") (eq .Name "C")}}
+                                {{ $concatenatedValues = printf "%s%s" $concatenatedValues .Value }}
                             {{end}}
-                        </div>
+                        {{end}}
                         {{ $lastTime = .Time.String }}
                     {{end}}
                 {{end}}
                 <!-- Output the last entry after the loop -->
                 {{if and (ne $lastTime "") (ne $concatenatedValues "")}}
                     <div>
-                        
                         <p>{{ $concatenatedValues }}</p>
                     </div>
                 {{end}}
@@ -128,7 +127,6 @@
         <p>&copy; 2024 | secretnamebasis </p>
     </footer>
 
-    <!-- Anchor link at the bottom of the page -->
-    <a id="bottom"></a>
+    <a id="current"></a>
 </body>
 </html>

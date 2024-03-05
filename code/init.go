@@ -19,15 +19,16 @@ func setupLogger() {
 }
 
 func checkWalletConnection() error {
-	if !dero.Connection() {
-		return errors.New("Wallet Connection Failure")
+	_, err := dero.Connection()
+	if err != nil {
+		return errors.New("wallet Connection Failure")
 	}
 	return nil
 }
 
 func checkMoneroConnection() error {
 	if monero.Height() <= 0 {
-		return errors.New("Monero Wallet Connection Failure")
+		return errors.New("monero Wallet Connection Failure")
 	}
 	return nil
 }
@@ -37,10 +38,11 @@ func makeDBName(s string) string {
 }
 
 func createDeroDB() (*bbolt.DB, string, error) {
-	deroDBName := makeDBName(dero.Address())
+	addr, _ := dero.Address()
+	deroDBName := makeDBName(addr)
 	db, err := createDB(deroDBName)
 	if err != nil {
-		return nil, "", fmt.Errorf("Failed to create database: %v", err)
+		return nil, "", fmt.Errorf("failed to create database: %v", err)
 	}
 	return db, deroDBName, nil
 }
@@ -63,14 +65,15 @@ func createBuckets(db *bbolt.DB) {
 }
 
 func performWalletOperations(deroDB *bbolt.DB) error {
-	if exports.Testing == true {
+	if exports.Testing {
 		return nil
 	}
 	return wallet.IncomingTransfers(deroDB)
 }
 
-func logWalletInfo(deroDBName, deroAddress string) {
+func logWalletInfo(deroDBName string) {
+	addr, _ := dero.Address()
 	exports.Logs.Info(dero.Echo("DB"), "DB", deroDBName)
 	exports.Logs.Info(dero.Echo("Address"), "Monero", monero.Address(0))
-	exports.Logs.Info(dero.Echo("Address"), "DERO", dero.Address())
+	exports.Logs.Info(dero.Echo("Address"), "DERO", addr)
 }
