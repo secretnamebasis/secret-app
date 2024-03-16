@@ -3,104 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
-
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Center content horizontally */
-            min-height: 93vh;
-        }
-
-        header,
-        footer {
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-        }
-
-        header h1 {
-            margin: 0;
-        }
-
-        main {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        section {
-            max-width: 600px;
-            width: 100%;
-        }
-
-        h2 {
-            color: #4285f4;
-        }
-
-        label {
-            display: block;
-            /* Make labels block-level elements to stack them vertically */
-            margin-bottom: 5px;
-            color: #4285f4;
-        }
-
-        input[type="text"],
-        textarea {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-            background-color: #000;
-            color: #fff;
-            border: 2px solid #fff; /* White outline */
-            border-radius: 5px;
-        }
-
-        input[type="submit"] {
-            background-color: #4285f4;
-            color: #fff;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #2a4d85;
-        }
-
-        footer {
-            margin-top: auto;
-        }
-
-        footer p {
-            margin: 5px 0;
-        }
-
-        .address {
-            font-weight: bold;
-            font-size: x-small;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/styles_index.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+    <title>{{.App}}</title>
 </head>
 <body>
     <header>
-        <h1>{{.Title}}</h1>
+        <img id="icon" src="/alexander-the-great.png" alt="Icon">
+        <h1>{{.App}}</h1>
     </header>
-
+    <!-- Second header -->
+    <header class="center">
+        <a href="/">
+            <h2>Home</h2>
+        </a>
+        <a href="/about">
+            <h2>About</h2>
+        </a>
+        <a href="/blog">
+            <h2>Blog</h2>
+        </a>
+    </header>
     <main>
         <section>
             <form action="/submit/entry" method="post">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" maxlength="100" required>
+                <br>
                 <label for="entry">Entry:</label>
                 <textarea id="entry" name="entry" rows="4" cols="50" maxlength="12000" required></textarea>
                 <br>

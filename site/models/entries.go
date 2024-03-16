@@ -1,9 +1,7 @@
 package models
 
-import "github.com/deroproject/derohe/rpc"
-
 type EntriesData struct {
-	Title   string
+	App     string
 	Dev     string
-	Entries []rpc.Entry
+	Entries []BlogEntry
 }

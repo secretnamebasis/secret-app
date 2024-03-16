@@ -17,11 +17,11 @@ var (
 	Testing bool // Global variable to indicate testing mode
 
 	Pong         = "You have purchased a really cool link"
-	deroUsername string
-	deroPassword string
+	DeroUsername string
+	DeroPassword string
 	deroIp       string
 	deroPort     string
-	deroEndpoint string
+	DeroEndpoint string
 
 	moneroUsername string
 	moneroPassword string
@@ -97,11 +97,11 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	deroUsername = os.Getenv("DERO_WALLET_USER")
-	deroPassword = os.Getenv("DERO_WALLET_PASS")
+	DeroUsername = os.Getenv("DERO_WALLET_USER")
+	DeroPassword = os.Getenv("DERO_WALLET_PASS")
 	deroIp = os.Getenv("DERO_SERVER_IP")
 	deroPort = os.Getenv("DERO_WALLET_PORT")
-	deroEndpoint = "http://" + deroIp + ":" + deroPort + "/json_rpc"
+	DeroEndpoint = "http://" + deroIp + ":" + deroPort + "/json_rpc"
 	moneroUsername = os.Getenv("MONERO_WALLET_USER")
 	moneroPassword = os.Getenv("MONERO_WALLET_PASS")
 	moneroIp = os.Getenv("MONERO_SERVER_IP")
@@ -110,13 +110,13 @@ func init() {
 
 	DeroHttpClient = &http.Client{
 		Transport: &TransportWithBasicAuth{
-			Username: deroUsername,
-			Password: deroPassword,
+			Username: DeroUsername,
+			Password: DeroPassword,
 			Base:     http.DefaultTransport,
 		},
 	}
 	DeroRpcClient = jsonrpc.NewClientWithOpts(
-		deroEndpoint,
+		DeroEndpoint,
 		&jsonrpc.RPCClientOpts{
 			HTTPClient: DeroHttpClient,
 		},

@@ -11,8 +11,8 @@ func SetupRoutes(app *fiber.App) {
 	app.Get("/", views.Home)
 	app.Get("/about", views.About)
 	app.Get("/entry", views.EntryPage)
-	app.Get("/entries", views.EntriesPage)
-
+	app.Get("/blog", views.BlogPage)
+	app.Get("/blog/:title", views.EntryDetailPage)
 	// Apply AuthReq middleware for /entry and /entries routes
 	authRoutes := app.Group("/", middleware.AuthReq())
 	authRoutes.Post("/submit/entry", views.SubmitEntryForm)

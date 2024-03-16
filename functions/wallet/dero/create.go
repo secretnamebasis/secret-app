@@ -14,9 +14,9 @@ func createRequest(e rpc.Entry, message string, db *bbolt.DB) {
 	RequestInfo(e, message+" request")
 
 	reply := createTransfer(e)
-	result := SendTransfer(reply)
+	result, _ := SendTransfer(reply)
 
-	if result != "" {
+	if result.TXID != "" {
 		updateDatabaseOnSuccess(db, message, e)
 		exports.Logs.Info(Echo("ping replied successfully with pong "), "result", result, "payment_id", response.PaymentID)
 		message = "contacts"

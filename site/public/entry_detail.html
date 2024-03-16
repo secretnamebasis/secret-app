@@ -3,46 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/styles_index.css">
+    <link rel="stylesheet" type="text/css" href="/styles_entry.css">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
-    <title>{{.App}}</title>
+    <title>{{URLDecode .Entry.Title}}</title>
+    <!-- Add any other meta tags here -->
 </head>
 <body>
     <header>
-        <img id="icon" src="alexander-the-great.png" alt="Icon">
+        <img id="icon" src="/alexander-the-great.png" alt="Icon">
         <h1>{{.App}}</h1>
     </header>
-
-    <!-- Second header -->
-    <header class="center">
-        <a href="/">
-            <h2>Home</h2>
-        </a>
-        <a href="/about">
-            <h2>About</h2>
-        </a>
-        <a href="/blog">
-            <h2>Blog</h2>
-        </a>
-    </header>
-
+        <!-- Second header -->
+        <header class="center">
+            <a href="/">
+                <h2>Home</h2>
+            </a>
+            <a href="/about">
+                <h2>About</h2>
+            </a>
+            <a href="/blog">
+                <h2>Blog</h2>
+            </a>
+        </header>
     <main>
-        <section>
-
-        </section>
+        <article>
+            <h1>{{URLDecode .Entry.Title}}</h1>
+            <p>{{ReplaceNewlines .Entry.Content}}</p>
+        </article>
     </main>
-    
     <footer>
         <div class="social-links">
-    
             <a href="https://github.com/secretnamebasis"><img src="/github-icon.png" alt="GitHub"></a>
             <a href="https://twitter.com/_s3cr37_n4m3_"><img src="/x-icon.png" alt="X"></a>
             <a href="https://discord.gg/BKdX9qHkgu"><img src="/discord-icon.png" alt="Discord"></a>
-    
         </div>
         <p>&copy; 2024 | secretnamebasis </p>
         <p>Donations and Private messages: </p>

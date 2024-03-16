@@ -1,7 +1,6 @@
 package dero
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/deroproject/derohe/rpc"
@@ -51,19 +50,19 @@ func Address() (string, error) {
 	return exports.Addr.String(), nil
 }
 
-func SendTransfer(params rpc.Transfer_Params) string {
+func SendTransfer(params rpc.Transfer_Params) (rpc.Transfer_Result, error) {
 	var transfers rpc.Transfer_Result
-	_ = exports.DeroRpcClient.CallFor(
+	err = exports.DeroRpcClient.CallFor(
 		&transfers,
 		"Transfer",
 		params,
 	)
 
-	if transfers.TXID == "" {
-		err := errors.New("Empty TXID")
-		exports.Logs.Error(err, Echo("TXID is \"\" string"))
+	if err != nil {
+		return transfers, err
 	}
-	return transfers.TXID
+
+	return transfers, nil
 }
 
 func GetBalance() (rpc.GetBalance_Result, error) {

@@ -1,130 +1,58 @@
-<!-- entries.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 93vh;
-        }
-
-        header, footer {
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-        }
-
-        header h1 {
-            margin: 0;
-        }
-
-        main {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        section {
-            max-width: 600px;
-            width: 100%;
-            margin-bottom: 20px; /* Add margin between Entries and New Entry button */
-        }
-
-        h2 {
-            color: #4285f4;
-        }
-
-        p {
-            margin-bottom: 15px;
-        }
-
-        footer {
-            margin-top: auto;
-        }
-
-        footer p {
-            margin: 5px 0;
-        }
-
-        .address {
-            font-weight: bold;
-            font-size: x-small;
-        }
-
-        /* Style for the time in entries */
-        .entry-time {
-            font-size: small; /* Adjust the font size to make it understated */
-            color: #777; /* Adjust the color for subtlety */
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/styles_about.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 <body>
     <header>
-        <h1>{{.Title}}</h1>
+        <img id="icon" src="alexander-the-great.png" alt="Icon">
+        <h1>{{.App}}</h1>
         <br>
-        <a class="go-to-current" href="#current">Go to Current</a>
     </header>
-
+    <!-- Second header -->
+    <header class="center">
+        <a href="/">
+            <h2>Home</h2>
+        </a>
+        <a href="/about">
+            <h2>About</h2>
+        </a>
+        <a href="/blog">
+            <h2>Blog</h2>
+        </a>
+        <!-- Add more content here as needed -->
+    </header>
     <main>
         <section>
             <h2>Entries</h2>
-            {{with .Entries}}
-                {{ $lastTime := "" }}
-                {{ $concatenatedValues := "" }}
-                {{range .}}
-                    {{if and (eq .Amount 0)  (gt (len .Payload_RPC) 0)}}
-                        {{if ne $lastTime .Time.String}}
-                            <!-- Output previous entry if not the first iteration -->
-                            {{if ne $lastTime ""}}
-                                <div>
-                                    <p>{{ $concatenatedValues }}</p>
-                                </div>
-                            {{end}}
-                            <!-- Reset the concatenated values for the new timestamp -->
-                            {{ $concatenatedValues = "" }}
-                        {{end}}
-                        <!-- Display timestamp only when it changes -->
-                        {{if ne $lastTime .Time.String}}
-                            <p class="entry-time">{{.Time.String}}</p>
-                        {{end}}
-                        {{range .Payload_RPC}}
-                            {{if and (eq .DataType "A") (eq .Name "R")}}
-                               
-                            {{end}}
-                            {{if and (eq .DataType "S") (eq .Name "C")}}
-                                {{ $concatenatedValues = printf "%s%s" $concatenatedValues .Value }}
-                            {{end}}
-                        {{end}}
-                        {{ $lastTime = .Time.String }}
-                    {{end}}
-                {{end}}
-                <!-- Output the last entry after the loop -->
-                {{if and (ne $lastTime "") (ne $concatenatedValues "")}}
-                    <div>
-                        <p>{{ $concatenatedValues }}</p>
-                    </div>
-                {{end}}
+            <a class="go-to-current" href="#current">Go to Current</a>
+            {{range .Entries}}
+                <div>
+                    <p>{{.Time}}</p>
+                    <h3><a href="/blog/{{.Title | urldecode}}">{{.Title | urldecode}}</a></h3>   
+                </div>
             {{end}}
         </section>
-
-        <!-- New Entry button using anchor tag without JavaScript -->
-        <a class="new-entry" href="/entry">New Entry</a>
     </main>
 
     <footer>
+        <div class="social-links">
+    
+            <a href="https://github.com/secretnamebasis"><img src="/github-icon.png" alt="GitHub"></a>
+            <a href="https://twitter.com/_s3cr37_n4m3_"><img src="/x-icon.png" alt="X"></a>
+            <a href="https://discord.gg/BKdX9qHkgu"><img src="/discord-icon.png" alt="Discord"></a>
+    
+        </div>
+        <p>&copy; 2024 | secretnamebasis </p>
         <p>Donations and Private messages: </p>
         <p><span class="dev">{{.Dev}}</span></p>
-        <p>&copy; 2024 | secretnamebasis </p>
     </footer>
 
     <a id="current"></a>

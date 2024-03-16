@@ -1,0 +1,107 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%; /* Set min-height to 100% of the viewport height */
+}
+
+header {
+    padding: 20px; /* Adjust padding as needed */
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    margin: 0; /* Remove default margins */
+}
+
+/* First header */
+header h1 {
+    margin: 0;
+}
+
+#icon {
+    width: 50px;
+    height: auto;
+}
+
+/* Second header */
+header.center {
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+header.center a {
+    margin: 0 10px;  /* Adjust margin for better spacing */
+    color: #fff;
+    text-decoration: none;
+}
+
+header.center a:hover {
+    text-decoration: underline;
+}
+main {
+    flex: 0;
+    padding: 20px;
+    max-width: 600px; /* Set maximum width for the box */
+    width: calc(100% - 80px); /* Set width to 100% minus padding */
+    margin: 20px auto; /* Center the box and add margin */
+    display: flex;
+    align-items: left;
+    flex-direction: column;
+    text-align: left; /* Align text to the left */
+    border: 1px solid #fff; /* Add border for visual separation */
+
+}
+
+section {
+    margin-bottom: 0px;
+}
+
+p {
+    margin-bottom: 0px;
+}
+
+a {
+    color: #4285f4;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+footer { 
+    padding: 10px 0; /* Adjust padding as needed */
+    margin-top: auto;
+    position: fixed;
+    bottom: 0;
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    margin: 0; /* Remove default margins */
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+.dev {
+    font-weight: lighter;
+    font-size: xx-small;
+}
+
+.social-links a {
+    margin: 0 5px;
+}
+
+.social-links img {
+    width: 40px;
+    height: auto;
+}
