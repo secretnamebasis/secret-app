@@ -53,11 +53,7 @@ func EntryDetailPage(c *fiber.Ctx) error {
 	}
 
 	// Render the entry detail page template with the entry content
-	data := struct {
-		App   string
-		Dev   string
-		Entry models.BlogEntry
-	}{
+	data := models.EntryData{
 		App: exports.DEVELOPER_NAME,
 		Dev: addr, // Assuming addr is defined somewhere in your code
 		Entry: models.BlogEntry{
@@ -73,9 +69,7 @@ func EntryDetailPage(c *fiber.Ctx) error {
 			"ReplaceNewlines": ReplaceNewlines,
 		},
 	).ParseFiles("./site/public/entry_detail.html")
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).SendString("Error parsing template: " + err.Error())
-	}
+
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).SendString("Error parsing template: " + err.Error())
 	}

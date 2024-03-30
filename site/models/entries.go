@@ -5,3 +5,9 @@ type EntriesData struct {
 	Dev     string
 	Entries []BlogEntry
 }
+
+type EntryData struct {
+	App   string
+	Dev   string
+	Entry BlogEntry
+}
